@@ -3,107 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#12151c">
+  <meta name="theme-color" content="#ebedf0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="AGY Remote">
   <link rel="manifest" href="manifest.json">
   <title>Antigravity IDE Remote Companion</title>
   <style>
+    :root {
+      --bg-base: #ebedf0;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f2f4f7;
+      --bg-pill: #dfe3ea;
+      --border-color: #d0d7de;
+      --border-subtle: #e1e4e8;
+      --text-main: #1f2328;
+      --text-muted: #57606a;
+      --text-dim: #8c959f;
+      --brand-blue: #1f6feb;
+      --brand-blue-hover: #0969da;
+      --badge-num-bg: #d1d6de;
+      --badge-num-text: #24292f;
+      --selected-bg: #e1e8f5;
+      --selected-border: #1f6feb;
+      --header-bg: #e2e5eb;
+      --status-bar-bg: #dfe3ea;
+      --stop-red: #cf222e;
+    }
+
+    [data-theme="dark"] {
+      --bg-base: #0d1117;
+      --bg-surface: #161b22;
+      --bg-subtle: #21262d;
+      --bg-pill: #21262d;
+      --border-color: #30363d;
+      --border-subtle: #21262d;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --text-dim: #6e7681;
+      --brand-blue: #2f81f7;
+      --brand-blue-hover: #388bfd;
+      --badge-num-bg: #30363d;
+      --badge-num-text: #c9d1d9;
+      --selected-bg: #1c2738;
+      --selected-border: #388bfd;
+      --header-bg: #161b22;
+      --status-bar-bg: #0d1117;
+      --stop-red: #f85149;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: #12151c; color: #f0f3f6; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
-    
-    /* Top Header matching Desktop IDE */
-    header { background-color: #161a23; border-bottom: 1px solid #1f2430; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; padding-top: max(10px, env(safe-area-inset-top)); }
-    .header-left { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; color: #e6edf3; }
-    .ide-logo { width: 18px; height: 18px; fill: #388bfd; }
+    body { background-color: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; transition: background-color 0.2s; }
+
+    /* Desktop Window Header */
+    header { background-color: var(--header-bg); border-bottom: 1px solid var(--border-color); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; z-index: 20; padding-top: max(10px, env(safe-area-inset-top)); }
+    .header-left { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.88rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ide-logo { width: 18px; height: 18px; fill: var(--brand-blue); flex-shrink: 0; }
     .header-right { display: flex; align-items: center; gap: 8px; }
-    .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 3px 8px; border-radius: 999px; background-color: #1f2430; color: #8b949e; font-weight: 500; }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; background-color: #f85149; }
-    .status-dot.online { background-color: #3fb950; box-shadow: 0 0 6px #3fb950; }
-    
-    /* Live Desktop Activity Accordion / Step Stream */
-    #activity-container { background-color: #161a23; border-bottom: 1px solid #1f2430; padding: 8px 16px; display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; }
-    .activity-header { display: flex; align-items: center; justify-content: space-between; color: #8b949e; cursor: pointer; user-select: none; }
-    .activity-title { display: flex; align-items: center; gap: 6px; font-weight: 500; }
-    .activity-pulse { width: 6px; height: 6px; border-radius: 50%; background-color: #58a6ff; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.4; transform: scale(0.9); } }
-    .activity-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-    .activity-step { display: flex; align-items: center; gap: 6px; color: #8b949e; font-size: 0.78rem; }
-    .activity-step.active { color: #58a6ff; font-weight: 500; }
-    .activity-step.done { color: #6e7681; }
-    .step-icon { font-size: 0.75rem; }
+    .theme-toggle-btn { background: transparent; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .theme-toggle-btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; padding: 3px 8px; border-radius: 999px; background-color: var(--bg-subtle); color: var(--text-muted); font-weight: 500; border: 1px solid var(--border-subtle); }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background-color: #cf222e; }
+    .status-dot.online { background-color: #2da44e; box-shadow: 0 0 5px #2da44e; }
 
-    /* Queue Banner */
-    #queue-banner { display: none; background-color: #1f2b3f; border-bottom: 1px solid #388bfd33; padding: 8px 16px; font-size: 0.8rem; color: #58a6ff; display: flex; align-items: center; justify-content: space-between; }
-    .queue-badge { background-color: #388bfd; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-right: 6px; }
+    /* Feed matching Desktop Chat */
+    #feed { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
 
-    /* Feed Canvas */
-    #feed { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
-    
-    /* Desktop-Style Message Cards */
-    .card { background-color: #1a1e28; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.2s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .card.user-msg { background-color: #1e2638; border: 1px solid #388bfd44; align-self: flex-end; max-width: 85%; }
-    .card.user-msg .card-title { color: #58a6ff; font-size: 0.78rem; margin-bottom: 2px; }
-    .card.agent-msg { background-color: #1a1e28; align-self: flex-start; max-width: 95%; }
-    .card-title { font-weight: 600; font-size: 0.9rem; color: #e6edf3; display: flex; align-items: center; gap: 6px; }
-    .card-body { font-size: 0.88rem; color: #c9d1d9; line-height: 1.45; word-break: break-word; white-space: pre-wrap; }
-    .card-time { font-size: 0.7rem; color: #6e7681; align-self: flex-end; margin-top: 2px; }
+    /* Desktop Progress Steps Stream (exact 1:1 match of Desktop IDE in screenshot) */
+    .steps-container { display: flex; flex-direction: column; gap: 3px; padding: 2px 4px; margin: 2px 0; }
+    .step-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; animation: fadeIn 0.15s ease-out; }
+    .step-item.active { color: var(--brand-blue); font-weight: 500; }
+    .step-item.waiting { color: var(--text-muted); font-style: italic; margin-top: 3px; }
+    .step-pulse { width: 6px; height: 6px; border-radius: 50%; background-color: var(--brand-blue); animation: pulse 1.4s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0% { opacity: 0.3; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0.3; transform: scale(0.85); } }
+    .step-code-badge { color: #cf222e; font-weight: 700; font-size: 0.75rem; letter-spacing: -0.5px; }
+    .step-chevron { font-size: 0.72rem; color: var(--text-dim); margin-left: 2px; }
 
-    /* Exact Desktop Antigravity Permission Card */
-    .card.permission-card { background-color: #1a1e28; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-    .perm-header { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.92rem; color: #f0f3f6; margin-bottom: 8px; }
-    .perm-code-box { background-color: #0f1218; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; color: #58a6ff; word-break: break-all; margin-bottom: 12px; }
+    /* User Prompt Card */
+    .card.user-msg { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 12px; align-self: flex-end; max-width: 90%; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .card.user-msg .card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .card.user-msg .card-author { color: var(--brand-blue); font-size: 0.75rem; font-weight: 600; }
+    .queue-pill { font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 6px; background-color: #fff8c5; color: #9a6700; border: 1px solid #d4a72c44; }
+    .queue-pill.processing { background-color: #ddf4ff; color: #0969da; border-color: #54aeff44; }
+
+    /* Agent Message Card */
+    .card.agent-msg { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 14px; align-self: flex-start; max-width: 95%; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .card-title { font-weight: 600; font-size: 0.88rem; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+    .card-body { font-size: 0.85rem; color: var(--text-main); line-height: 1.45; word-break: break-word; white-space: pre-wrap; }
+    .card-time { font-size: 0.68rem; color: var(--text-dim); align-self: flex-end; margin-top: 2px; }
+
+    /* Exact Desktop Permission Card (1:1 with media_1794896579026_81be6010.jpg) */
+    .card.permission-card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin: 6px 0; }
+    .perm-header { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.92rem; color: var(--text-main); margin-bottom: 10px; }
+    .perm-header svg { width: 18px; height: 18px; fill: var(--brand-blue); flex-shrink: 0; }
+    .perm-code-box { background-color: var(--bg-pill); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 7px 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.78rem; color: var(--text-main); word-break: break-all; margin-bottom: 12px; }
     
-    .perm-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .perm-option-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; background-color: #161a23; border: 1px solid transparent; cursor: pointer; transition: all 0.15s; }
-    .perm-option-row:active, .perm-option-row.selected { background-color: #21283b; border-color: #388bfd; }
-    .perm-num-badge { width: 22px; height: 22px; border-radius: 6px; background-color: #283145; color: #58a6ff; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .perm-option-row.selected .perm-num-badge { background-color: #388bfd; color: #ffffff; }
-    .perm-opt-text { font-size: 0.82rem; color: #c9d1d9; line-height: 1.35; flex: 1; }
+    .perm-options { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .perm-option-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background-color: transparent; border: 1px solid transparent; cursor: pointer; transition: background-color 0.12s; }
+    .perm-option-row:hover, .perm-option-row:active { background-color: var(--bg-subtle); }
+    .perm-option-row.selected { background-color: var(--selected-bg); border-color: var(--selected-border); }
+    .perm-num-badge { width: 22px; height: 22px; border-radius: 6px; background-color: var(--badge-num-bg); color: var(--badge-num-text); font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .perm-option-row.selected .perm-num-badge { background-color: var(--brand-blue); color: #ffffff; }
+    .perm-opt-text { font-size: 0.82rem; color: var(--text-main); line-height: 1.35; flex: 1; }
     
     .perm-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 6px; }
-    .perm-btn-skip { background: transparent; border: none; color: #8b949e; font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 6px; cursor: pointer; }
-    .perm-btn-submit { background-color: #388bfd; color: #ffffff; border: none; font-size: 0.82rem; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-    .perm-btn-submit:active { background-color: #1f6feb; }
+    .perm-btn-skip { background: transparent; border: none; color: var(--text-muted); font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 6px; cursor: pointer; }
+    .perm-btn-submit { background-color: var(--brand-blue); color: #ffffff; border: none; font-size: 0.82rem; font-weight: 600; padding: 8px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .perm-btn-submit:active { background-color: var(--brand-blue-hover); }
     
-    .perm-resolved-badge { font-size: 0.8rem; font-weight: 600; padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; }
-    .perm-resolved-badge.approved { background-color: #1b3828; color: #3fb950; border: 1px solid #238636; }
-    .perm-resolved-badge.denied { background-color: #3d1f24; color: #f85149; border: 1px solid #da3633; }
+    .perm-resolved-badge { font-size: 0.78rem; font-weight: 600; padding: 6px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; }
+    .perm-resolved-badge.approved { background-color: #dafbe1; color: #1a7f37; border: 1px solid #aceebb; }
+    .perm-resolved-badge.denied { background-color: #ffebe9; color: #cf222e; border: 1px solid #ff8182; }
 
-    /* Exact Desktop Input Container */
-    footer { background-color: #12151c; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-    .desktop-input-container { background-color: #1a1e28; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
-    .desktop-input-container:focus-within { border-color: #388bfd66; box-shadow: 0 0 0 1px #388bfd44; }
+    /* Desktop Input Box Structure (matching screenshot) */
+    footer { background-color: var(--bg-base); padding: 8px 12px; padding-bottom: 4px; }
+    .prompt-box { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px; display: flex; flex-direction: column; padding: 8px 12px; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .prompt-box:focus-within { border-color: var(--brand-blue); box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.15); }
     
-    /* Multiline textarea */
-    #prompt-input { width: 100%; background: transparent; border: none; padding: 12px 14px 6px 14px; color: #f0f3f6; font-size: 0.92rem; line-height: 1.45; resize: none; outline: none; min-height: 42px; max-height: 120px; overflow-y: auto; }
-    #prompt-input::placeholder { color: #6e7681; }
+    /* Multiline textarea - Virtual keyboard Enter adds newline */
+    #prompt-input { width: 100%; background: transparent; border: none; color: var(--text-main); font-size: 0.9rem; line-height: 1.45; resize: none; outline: none; min-height: 36px; max-height: 120px; overflow-y: auto; padding: 2px 0; }
+    #prompt-input::placeholder { color: var(--text-dim); }
 
-    /* Controls row matching Desktop IDE */
-    .input-controls-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 8px 10px; }
-    .controls-left { display: flex; align-items: center; gap: 8px; }
-    .btn-attach { background: transparent; border: none; color: #8b949e; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .model-pill { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #8b949e; background-color: #161a23; border: 1px solid rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 6px; user-select: none; }
-    
-    .controls-right { display: flex; align-items: center; }
-    .btn-action-circle { width: 32px; height: 32px; border-radius: 50%; border: none; background-color: #388bfd; color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
-    .btn-action-circle:active { transform: scale(0.94); }
-    .btn-action-circle.working { background-color: #f85149; }
+    /* Inner Toolbar Row */
+    .prompt-toolbar { display: flex; align-items: center; justify-content: space-between; padding-top: 4px; border-top: 1px solid var(--border-subtle); margin-top: 2px; }
+    .toolbar-left { display: flex; align-items: center; gap: 8px; }
+    .toolbar-btn-add { background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; }
+    .toolbar-btn-add svg { width: 16px; height: 16px; fill: currentColor; }
+    .model-pill { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text-muted); background-color: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 6px; padding: 3px 8px; font-weight: 500; }
+    .model-pill svg { width: 10px; height: 10px; fill: currentColor; }
+
+    /* Action Circular Button */
+    .btn-action-circle { width: 32px; height: 32px; border-radius: 50%; border: none; background-color: var(--brand-blue); color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+    .btn-action-circle:active { transform: scale(0.92); }
+    .btn-action-circle.working { background-color: var(--stop-red); }
     .btn-action-circle svg { width: 15px; height: 15px; fill: white; }
+
+    /* Desktop Bottom Status Bar (matching media_1794896579026_81be6010.jpg) */
+    .desktop-status-bar { background-color: var(--status-bar-bg); border-top: 1px solid var(--border-color); padding: 4px 12px; font-size: 0.68rem; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; overflow-x: auto; white-space: nowrap; padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+    .status-items-left { display: flex; align-items: center; gap: 10px; }
+    .status-item { display: inline-flex; align-items: center; gap: 4px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-  <!-- Top Header matching Desktop IDE -->
+  <!-- Desktop Header -->
   <header>
     <div class="header-left">
       <svg class="ide-logo" viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 4l6.5 11h-13L12 6z"/></svg>
       <span>Antigravity IDE Remote</span>
     </div>
     <div class="header-right">
+      <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
+        <svg id="theme-icon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+      </button>
       <div class="status-badge">
         <div id="status-dot" class="status-dot"></div>
         <span id="status-text">Connecting...</span>
@@ -111,82 +165,82 @@
     </div>
   </header>
 
-  <!-- Live Activity Accordion (Desktop Step Stream) -->
-  <div id="activity-container">
-    <div class="activity-header" onclick="toggleActivity()">
-      <div class="activity-title">
-        <div class="activity-pulse"></div>
-        <span id="current-agent-state">Waiting for user input...</span>
-      </div>
-      <span id="activity-toggle-icon">▾</span>
-    </div>
-    <div id="activity-list" class="activity-list"></div>
-  </div>
-
-  <!-- Queue Banner -->
-  <div id="queue-banner" style="display: none;">
-    <div><span class="queue-badge" id="queue-count">0</span><span id="queue-text">Prompts queued for next turn</span></div>
-  </div>
-
-  <!-- Main Chat / Messages Feed -->
+  <!-- Feed: Messages, Inline Step Pills, and Permission Cards -->
   <div id="feed">
     <div class="card agent-msg">
-      <div class="card-title">📱 Antigravity Companion Ready</div>
-      <div class="card-body">Desktop IDE session is active. Prompts and execution approvals are routed to your phone in real time.</div>
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#1f6feb"><path d="M12 2L2 19h20L12 2zm0 4l6.5 11h-13L12 6z"/></svg>
+        <span>Antigravity Remote Connected</span>
+      </div>
+      <div class="card-body">Desktop session is active. Execution permissions and real-time step progress are synchronized directly with your device.</div>
       <div class="card-time" id="init-time">Connected</div>
     </div>
   </div>
 
-  <!-- Desktop-Style Chat Input Box -->
+  <!-- Desktop Input Bar -->
   <footer>
-    <div class="desktop-input-container">
+    <div class="prompt-box">
       <textarea id="prompt-input" rows="1" placeholder="Ask anything, @ to mention, / for actions" autocomplete="off"></textarea>
-      <div class="input-controls-row">
-        <div class="controls-left">
-          <button class="btn-attach" title="Add Context">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          </button>
+      <div class="prompt-toolbar">
+        <div class="toolbar-left">
+          <button class="toolbar-btn-add" title="Actions">+</button>
           <div class="model-pill">
-            <span>Gemini 3.8 Flash High</span>
-            <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            <span>Gemini 3.8 Flash Medium</span>
+            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
           </div>
         </div>
-        <div class="controls-right">
-          <button id="action-btn" class="btn-action-circle" onclick="handleActionButton()" title="Send prompt">
-            <!-- Upward Arrow Icon (Send) -->
-            <svg id="icon-send" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
-            <!-- Square Stop Icon (when agent working) -->
-            <svg id="icon-stop" viewBox="0 0 24 24" style="display: none;"><path d="M6 6h12v12H6z"/></svg>
-          </button>
-        </div>
+        <button id="action-btn" class="btn-action-circle" onclick="handleActionButton()" title="Send prompt">
+          <svg id="icon-send" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+          <svg id="icon-stop" viewBox="0 0 24 24" style="display: none;"><path d="M6 6h12v12H6z"/></svg>
+        </button>
       </div>
     </div>
   </footer>
+
+  <!-- Desktop Status Bar -->
+  <div class="desktop-status-bar">
+    <div class="status-items-left">
+      <span class="status-item">Spaces: 4</span>
+      <span class="status-item">UTF-8</span>
+      <span class="status-item">LF</span>
+      <span class="status-item">{} Plain Text</span>
+    </div>
+    <span class="status-item">Antigravity Mobile</span>
+  </div>
 
   <script>
     const feed = document.getElementById('feed');
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
     const promptInput = document.getElementById('prompt-input');
-    const currentAgentState = document.getElementById('current-agent-state');
-    const activityList = document.getElementById('activity-list');
-    const queueBanner = document.getElementById('queue-banner');
-    const queueCount = document.getElementById('queue-count');
     const actionBtn = document.getElementById('action-btn');
     const iconSend = document.getElementById('icon-send');
     const iconStop = document.getElementById('icon-stop');
 
     let isAgentWorking = false;
     let selectedPermOption = {};
+    let activeStepsContainer = null;
 
-    // Auto-resize textarea as user types newlines
+    // Theme support
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('agy_theme', next);
+    }
+    const savedTheme = localStorage.getItem('agy_theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    // Auto-expand textarea as user types newlines
     promptInput.addEventListener('input', function() {
       this.style.height = 'auto';
       this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
 
     // Enter Key inserts a newline on mobile virtual keyboard!
-    // Does NOT submit unless user presses Ctrl+Enter or Cmd+Enter on physical keyboards.
+    // Ctrl+Enter or Cmd+Enter submits.
     promptInput.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
@@ -194,50 +248,78 @@
       }
     });
 
-    function toggleActivity() {
-      const isHidden = activityList.style.display === 'none';
-      activityList.style.display = isHidden ? 'flex' : 'none';
-      document.getElementById('activity-toggle-icon').innerText = isHidden ? '▾' : '▸';
+    function getOrCreateActiveStepsContainer() {
+      if (!activeStepsContainer) {
+        activeStepsContainer = document.createElement('div');
+        activeStepsContainer.className = 'steps-container';
+        feed.appendChild(activeStepsContainer);
+      }
+      return activeStepsContainer;
+    }
+
+    function addInlineProgressStep(step) {
+      const container = getOrCreateActiveStepsContainer();
+
+      // Complete previous active step
+      const prevActive = container.querySelector('.step-item.active');
+      if (prevActive) {
+        prevActive.classList.remove('active');
+        prevActive.classList.add('done');
+        const pulse = prevActive.querySelector('.step-pulse');
+        if (pulse) pulse.remove();
+        if (!prevActive.querySelector('.step-chevron')) {
+          const chev = document.createElement('span');
+          chev.className = 'step-chevron';
+          chev.innerText = '>';
+          prevActive.appendChild(chev);
+        }
+      }
+
+      const row = document.createElement('div');
+      const codeIconHtml = step.is_code ? '<span class="step-code-badge">{}</span> ' : '';
+
+      if (step.step_type === 'tool_done') {
+        row.className = 'step-item done';
+        row.innerHTML = `<span>${codeIconHtml}${escapeHtml(step.label)}</span><span class="step-chevron">></span>`;
+        container.appendChild(row);
+      } else {
+        row.className = 'step-item active';
+        row.innerHTML = `<div class="step-pulse"></div><span>${codeIconHtml}${escapeHtml(step.label)}</span>`;
+        container.appendChild(row);
+      }
+
+      feed.scrollTop = feed.scrollHeight;
     }
 
     function setAgentState(state, detail) {
-      if (state === 'working') {
+      if (state === 'working' || state === 'thinking') {
         isAgentWorking = true;
-        currentAgentState.innerText = detail || 'Working...';
         actionBtn.classList.add('working');
         iconSend.style.display = 'none';
         iconStop.style.display = 'block';
-      } else if (state === 'thinking') {
-        isAgentWorking = true;
-        currentAgentState.innerText = detail || 'Thinking...';
-        actionBtn.classList.add('working');
-        iconSend.style.display = 'none';
-        iconStop.style.display = 'block';
+
+        if (detail) {
+          addInlineProgressStep({ step_type: 'tool_start', label: detail });
+        }
       } else {
         isAgentWorking = false;
-        currentAgentState.innerText = 'Waiting for user input...';
         actionBtn.classList.remove('working');
         iconSend.style.display = 'block';
         iconStop.style.display = 'none';
-      }
-    }
 
-    function addActivityStep(step) {
-      const stepRow = document.createElement('div');
-      stepRow.className = 'activity-step ' + (step.step_type === 'tool_start' ? 'active' : 'done');
-      stepRow.innerHTML = `<span class="step-icon">${step.step_type === 'tool_start' ? '⚡' : '✓'}</span><span>${escapeHtml(step.label)}</span>`;
-      activityList.prepend(stepRow);
-      if (activityList.children.length > 5) {
-        activityList.removeChild(activityList.lastChild);
-      }
-      if (step.step_type === 'tool_start') {
-        currentAgentState.innerText = step.label;
+        // Add "Waiting for user input" step pill (matching desktop IDE)
+        if (activeStepsContainer) {
+          const waitingRow = document.createElement('div');
+          waitingRow.className = 'step-item waiting';
+          waitingRow.innerText = 'Waiting for user input';
+          activeStepsContainer.appendChild(waitingRow);
+          activeStepsContainer = null;
+        }
       }
     }
 
     function handleActionButton() {
       if (isAgentWorking) {
-        // Stop/interrupt action
         sendStopRequest();
       } else {
         submitPrompt();
@@ -248,10 +330,16 @@
       const text = promptInput.value.trim();
       if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-      ws.send(JSON.stringify({ type: 'prompt', text: text }));
+      const promptId = 'p-' + Date.now();
+      ws.send(JSON.stringify({ type: 'prompt', text: text, id: promptId }));
 
       // Append user message card
-      appendUserMessage(text);
+      appendUserMessage(text, promptId, isAgentWorking);
+
+      // Fresh inline step container for this prompt
+      activeStepsContainer = document.createElement('div');
+      activeStepsContainer.className = 'steps-container';
+      feed.appendChild(activeStepsContainer);
 
       promptInput.value = '';
       promptInput.style.height = 'auto';
@@ -259,15 +347,19 @@
 
     function sendStopRequest() {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: 'prompt', text: 'terminate that script' }));
-      appendUserMessage('🛑 Interrupt / Terminate requested');
+      ws.send(JSON.stringify({ type: 'prompt', text: 'stop the execution' }));
+      appendUserMessage('🛑 Stop execution requested', 'stop-' + Date.now(), false);
     }
 
-    function appendUserMessage(text) {
+    function appendUserMessage(text, id, isQueued) {
       const card = document.createElement('div');
       card.className = 'card user-msg';
+      card.id = `msg-${id}`;
       card.innerHTML = `
-        <div class="card-title">You (via Mobile)</div>
+        <div class="card-header">
+          <span class="card-author">You</span>
+          ${isQueued ? '<span class="queue-pill">⏳ Queued for next turn</span>' : ''}
+        </div>
         <div class="card-body">${escapeHtml(text)}</div>
         <div class="card-time">${formatTime()}</div>
       `;
@@ -281,26 +373,31 @@
       card.className = 'card permission-card';
       card.id = `approval-${item.id}`;
 
-      selectedPermOption[item.id] = item.options[0] || '1. Yes, allow this time';
+      selectedPermOption[item.id] = item.options[0] || '1  Yes, allow this time';
 
       let optionsHtml = '';
       item.options.forEach((opt, idx) => {
         const num = idx + 1;
         const isSelected = idx === 0 ? 'selected' : '';
+        // Clean display text without duplicated numbers
+        const cleanOpt = opt.replace(/^\d+[\.\s]+/, '');
         optionsHtml += `
           <div class="perm-option-row ${isSelected}" id="opt-${item.id}-${idx}" onclick="selectPermOption('${item.id}', ${idx}, '${escapeHtml(opt)}')">
             <div class="perm-num-badge">${num}</div>
-            <div class="perm-opt-text">${escapeHtml(opt)}</div>
+            <div class="perm-opt-text">${escapeHtml(cleanOpt)}</div>
           </div>
         `;
       });
 
+      const title = item.title || 'Allow read access to this path?';
+      const target = item.target || item.question || '';
+
       card.innerHTML = `
         <div class="perm-header">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="#58a6ff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-          <span>Permission Required</span>
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          <span>${escapeHtml(title)}</span>
         </div>
-        <div class="perm-code-box">${escapeHtml(item.question)}</div>
+        <div class="perm-code-box">${escapeHtml(target)}</div>
         <div class="perm-options" id="opts-${item.id}">${optionsHtml}</div>
         <div class="perm-actions" id="actions-${item.id}">
           <button class="perm-btn-skip" onclick="submitDecision('${item.id}', 'Skip')">Skip</button>
@@ -324,7 +421,7 @@
     }
 
     function submitChosenDecision(approvalId) {
-      const choice = selectedPermOption[approvalId] || '1. Yes, allow this time';
+      const choice = selectedPermOption[approvalId] || '1  Yes, allow this time';
       submitDecision(approvalId, choice);
     }
 
@@ -347,12 +444,16 @@
       }
     }
 
-    function updateQueueDisplay(queue) {
-      if (queue && queue.length > 0) {
-        queueBanner.style.display = 'flex';
-        queueCount.innerText = queue.length;
-      } else {
-        queueBanner.style.display = 'none';
+    function updatePromptStatus(data) {
+      if (data.status === 'processing' && data.id) {
+        const msgCard = document.getElementById(`msg-${data.id}`);
+        if (msgCard) {
+          const pill = msgCard.querySelector('.queue-pill');
+          if (pill) {
+            pill.className = 'queue-pill processing';
+            pill.innerText = '⚡ Processing';
+          }
+        }
       }
     }
 
@@ -414,16 +515,12 @@
 
           if (data.type === 'init_state') {
             setAgentState(data.agent_state);
-            updateQueueDisplay(data.queue);
-            if (data.recent_steps) {
-              data.recent_steps.forEach(s => addActivityStep(s));
-            }
           } else if (data.type === 'progress_step') {
-            addActivityStep(data.step);
+            addInlineProgressStep(data.step);
           } else if (data.type === 'agent_state') {
             setAgentState(data.state, data.detail);
-          } else if (data.type === 'queue_update') {
-            updateQueueDisplay(data.queue);
+          } else if (data.type === 'prompt_status') {
+            updatePromptStatus(data);
           } else if (data.type === 'approval') {
             renderPermissionCard(data);
           } else if (data.type === 'notification') {

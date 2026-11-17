@@ -39,35 +39,44 @@ def emit_user_progress(tool_name: str, args: dict):
     """Emits clean, high-level task progress for the end user on mobile (skips internal companion noise)."""
     try:
         label = ""
+        is_code = False
         if tool_name == "read_file":
-            fp = Path(args.get("Path", "")).name
-            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use"]):
-                label = f"Analyzing {fp}..."
+            raw_path = args.get("Path", "")
+            fp = Path(raw_path).name
+            if not fp or any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "mobile_listener", "run_companion", "config.json"]):
+                return
+            is_code = any(fp.endswith(ext) for ext in [".json", ".py", ".js", ".ts", ".html", ".css", ".md", ".env"])
+            label = f"Analyzing {fp}"
         elif tool_name in ["write_file", "edit_file"]:
-            fp = Path(args.get("Path", "")).name
-            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use"]):
-                label = f"Updating {fp}..."
+            raw_path = args.get("Path", "")
+            fp = Path(raw_path).name
+            if not fp or any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "config.json"]):
+                return
+            is_code = any(fp.endswith(ext) for ext in [".json", ".py", ".js", ".ts", ".html", ".css", ".md"])
+            label = f"Modifying {fp}"
         elif tool_name == "run_command":
             cmd = args.get("CommandLine", "").strip()
-            if any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem"]):
+            if any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem", "git status", "git rev-parse", "git log"]):
                 return
-            if "python" in cmd.lower():
+            summary = args.get("toolSummary", "")
+            if summary and not any(i in summary.lower() for i in ["mobile", "companion", "gate", "status"]):
+                label = f"Running {summary.lower()}"
+            elif "python" in cmd.lower():
                 parts = cmd.split()
                 script = [p for p in parts if p.endswith(".py")]
-                label = f"Running {Path(script[0]).name}..." if script else "Running script..."
+                label = f"Running {Path(script[0]).name}" if script else "Running script"
             elif cmd.startswith("git"):
                 parts = cmd.split()
                 sub = parts[1] if len(parts) > 1 else ""
-                label = f"Running git {sub}..."
-            elif "npm" in cmd.lower():
-                label = "Running npm command..."
+                label = f"Running git {sub}"
             else:
-                label = f"Executing command..."
+                label = "Running task"
         
         if label:
             httpx.post("http://127.0.0.1:8765/api/progress", json={
                 "step_type": "tool_start",
                 "label": label,
+                "is_code": is_code,
                 "detail": ""
             }, timeout=0.4)
     except Exception:
@@ -141,17 +150,23 @@ def main():
 
             # Route sensitive file request to MOBILE
             log(f"Routing sensitive file permission request to mobile: {file_path}")
-            question_text = f"Allow access to sensitive file on Desktop?\n\nPath: {file_path}"
+            title_text = "Allow read access to this path?" if tool_name == "read_file" else "Allow access to this path?"
             options = [
-                "1. Yes, allow this time",
-                "2. Yes, and always allow in this conversation",
-                "3. Yes, and always allow",
-                "4. No (deny access)"
+                "1  Yes, allow this time",
+                "2  Yes, and always allow in this conversation",
+                "3  Yes, and always allow",
+                "4  No (tell the agent what to do instead)"
             ]
             try:
                 resp = httpx.post(
                     "http://127.0.0.1:8765/api/ask",
-                    json={"question": question_text, "options": options, "timeout": 300},
+                    json={
+                        "title": title_text,
+                        "target": file_path,
+                        "question": file_path,
+                        "options": options,
+                        "timeout": 300
+                    },
                     timeout=310.0
                 )
                 if resp.status_code == 200:
@@ -209,19 +224,24 @@ def main():
 
         # Route ungranted command to MOBILE PWA
         log(f"Routing permission request to mobile phone: {cmd[:80]}")
-        short_cmd = cmd[:160] + "..." if len(cmd) > 160 else cmd
-        question_text = f"Allow command execution on Desktop?\n\n{short_cmd}"
+        short_cmd = cmd[:200] + "..." if len(cmd) > 200 else cmd
         options = [
-            "1. Yes, allow this time",
-            "2. Yes, and always allow in this conversation",
-            "3. Yes, and always allow",
-            "4. No (deny execution)"
+            "1  Yes, allow this time",
+            "2  Yes, and always allow in this conversation",
+            "3  Yes, and always allow",
+            "4  No (tell the agent what to do instead)"
         ]
 
         try:
             resp = httpx.post(
                 "http://127.0.0.1:8765/api/ask",
-                json={"question": question_text, "options": options, "timeout": 300},
+                json={
+                    "title": "Allow this command to run?",
+                    "target": short_cmd,
+                    "question": short_cmd,
+                    "options": options,
+                    "timeout": 300
+                },
                 timeout=310.0
             )
             if resp.status_code == 200:

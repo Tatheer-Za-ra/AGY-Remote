@@ -41,7 +41,9 @@ async def api_ask(payload: dict):
     question = payload.get("question", "Approval requested")
     options = payload.get("options", ["Approve", "Deny"])
     timeout = payload.get("timeout", 300)
-    decision = await bridge.ask_approval(question, options, timeout=timeout)
+    title = payload.get("title")
+    target = payload.get("target")
+    decision = await bridge.ask_approval(question, options, timeout=timeout, title=title, target=target)
     return {"decision": decision}
 
 @app.post("/api/remote_turn")
@@ -56,7 +58,8 @@ async def api_progress(payload: dict):
     step_type = payload.get("step_type", "tool_start")
     label = payload.get("label", "")
     detail = payload.get("detail", "")
-    await bridge.broadcast_step(step_type, label, detail)
+    is_code = payload.get("is_code", False)
+    await bridge.broadcast_step(step_type, label, detail, is_code=is_code)
     return {"status": "broadcasted"}
 
 @app.post("/api/agent_state")

@@ -60,12 +60,13 @@ class PWABridge:
             "detail": detail
         })
 
-    async def broadcast_step(self, step_type: str, label: str, detail: str = ""):
+    async def broadcast_step(self, step_type: str, label: str, detail: str = "", is_code: bool = False):
         step_obj = {
             "id": str(uuid.uuid4())[:8],
             "step_type": step_type, # e.g. "tool_start", "tool_done", "analyzing", "running"
             "label": label,
-            "detail": detail
+            "detail": detail,
+            "is_code": is_code
         }
         if step_type == "tool_start":
             self._active_step = step_obj
@@ -143,7 +144,7 @@ class PWABridge:
         }
         await self.broadcast(payload)
 
-    async def ask_approval(self, question: str, options: Optional[List[str]] = None, timeout: int = 300) -> str:
+    async def ask_approval(self, question: str, options: Optional[List[str]] = None, timeout: int = 300, title: Optional[str] = None, target: Optional[str] = None) -> str:
         if not options:
             options = ["Approve", "Deny"]
 
@@ -155,6 +156,8 @@ class PWABridge:
         payload = {
             "type": "approval",
             "id": approval_id,
+            "title": title or "Permission Required",
+            "target": target or question,
             "question": question,
             "options": options
         }
