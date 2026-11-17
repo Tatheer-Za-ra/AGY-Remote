@@ -242,6 +242,12 @@
     }
 
     function addFloatingQueuedPrompt(prompt) {
+      // Ensure the queued prompt is NEVER in the chat feed while queued
+      if (prompt && prompt.id) {
+        const existing = document.getElementById(`msg-${prompt.id}`);
+        if (existing) existing.remove();
+      }
+
       if (!queuedPromptsList.some(p => p.id === prompt.id)) {
         queuedPromptsList.push(prompt);
       }
@@ -404,10 +410,11 @@
       ws.send(JSON.stringify({ type: 'prompt', text: text, id: promptId }));
 
       if (isAgentWorking) {
-        // FLOATED CONDITION: do NOT upload to feed yet!
+        // FLOATED CONDITION: do NOT upload to feed! Put into floating queued container only.
         addFloatingQueuedPrompt({ id: promptId, text: text });
       } else {
-        // Immediately uploaded to feed when agent is idle
+        // Agent is idle: begins processing immediately
+        isAgentWorking = true;
         appendUserMessage(text, promptId, false);
 
         if (processingBar) {
@@ -597,11 +604,20 @@
             setAgentState(data.agent_state);
             if (data.queue && Array.isArray(data.queue)) {
               queuedPromptsList = data.queue;
+              // Ensure queued prompts are never in feed
+              data.queue.forEach(item => {
+                const existing = document.getElementById(`msg-${item.id}`);
+                if (existing) existing.remove();
+              });
               renderFloatingQueue();
             }
           } else if (data.type === 'queue_update') {
             if (data.queue && Array.isArray(data.queue)) {
               queuedPromptsList = data.queue;
+              data.queue.forEach(item => {
+                const existing = document.getElementById(`msg-${item.id}`);
+                if (existing) existing.remove();
+              });
               renderFloatingQueue();
             }
           } else if (data.type === 'prompt_queued') {

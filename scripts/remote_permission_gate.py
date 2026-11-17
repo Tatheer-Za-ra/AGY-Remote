@@ -206,8 +206,7 @@ def main():
             "scripts/remote_permission_gate", "scripts/run_gate.bat", "scripts/run_post_tool.bat",
             "python.exe -c", "python -c", "Get-Content", "Get-ChildItem", "Select-String",
             "Test-Path", "Get-Item", "Get-Location", "Get-Process", "Stop-Process",
-            "Get-CimInstance", "taskkill", "tasklist", "netstat", "curl", "git status",
-            "git config", "git diff", "git log", "git rev-parse"
+            "Get-CimInstance", "taskkill", "tasklist", "netstat", "curl", "git"
         ]
         if any(p.lower() in cmd.lower() for p in companion_infra_patterns):
             log(f"Auto-allowing companion infra command: {cmd[:60]}")
