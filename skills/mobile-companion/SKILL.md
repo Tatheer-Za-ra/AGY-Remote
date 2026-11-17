@@ -9,20 +9,37 @@ This skill allows the agent to communicate bidirectionally with the user's mobil
 
 ## 🛡️ Dynamic Two-State Permission Model
 
-To provide a seamless remote experience without compromising desktop security, the Mobile Companion implements a dynamic two-state permission architecture:
+To provide a seamless remote experience with desktop parity and zero desktop popups, the Mobile Companion implements a dynamic two-state permission architecture:
 
 ### 1. When Companion Mode is ON (Remote Session Active):
-- **Automated Communication**: All push notifications, status cards, audio chimes, and background listener processes are **automatically allowed** with zero desktop prompts.
-- **Mobile Touch Redirection**: Any processing commands or file operations requiring user confirmation are **redirected directly to the user's phone screen** with the identical 4 desktop options:
+- **Automated Communication**: All internal companion infrastructure (`mobile_listener.py`, `gate.log`, `tasklist`, `netstat`, `git`) is automatically allowed without desktop popups or mobile spam.
+- **Mobile Touch Redirection**: Any ungranted terminal commands or sensitive file accesses (`.env`, certificates) are redirected directly to the user's phone screen with the 4 standard desktop options:
   1. `Yes, allow this time`
   2. `Yes, and always allow in this conversation`
   3. `Yes, and always allow`
-  4. `No (deny execution)`
-- **Remote Decision Routing**: Tapping any option on the phone immediately transmits the decision to the desktop execution engine.
+  4. `No (tell the agent what to do instead)`
+- **Dynamic Grant Injection**: Approved decisions inject directly into `~/.gemini/config/config.json` before execution, ensuring **zero desktop popups** on the physical monitor.
+- **Single-Use Auto-Cleanup**: The `PostToolUse` lifecycle hook immediately cleans single-use grants after tool execution.
 
-### 2. When Companion Mode is OFF (Desktop Session Active):
-- The lifecycle hook automatically detects that the companion daemon is inactive and **instantly reverts to standard desktop permission review (`ask`)**.
-- No permissions remain bypassed when the user is back at their workstation.
+### 2. When Companion Mode is OFF (Workstation Active):
+- The lifecycle hook automatically detects that `.companion_active` is absent and instantly reverts to standard desktop permission review (`ask`).
+- All companion grants are safely reverted in `config.json`.
+
+---
+
+## ⏳ Strict Floating Queue & Promotion Protocol
+
+When processing tasks:
+1. **Floated Condition**: Any prompt submitted while the desktop is busy docks exclusively in a floating queued card above the input box.
+2. **Sequential Promotion**: When a task completes, its response card must be pushed to the user **first**.
+3. **Upload to Feed**: Only after the response is delivered is the next queued prompt promoted from the floating box into the active chat feed.
+
+---
+
+## ⚡ Performance Optimization
+
+- **Fast-Path Check**: Companion mode status is verified using a local `.companion_active` marker file (0.01ms check) rather than network roundtrips.
+- **Single-Turn Execution**: Responses and background listener arming are handled in a single streamlined turn without redundant polling calls.
 
 ---
 
@@ -30,17 +47,12 @@ To provide a seamless remote experience without compromising desktop security, t
 
 1. `mobile_notify(title: str, message: str, code: Optional[str])`:
    - Sends an instant push notification card to the user's mobile phone screen.
-   - Triggers a synthesized Web Audio chime and `navigator.vibrate` haptic feedback.
+   - Triggers a Web Audio chime and haptic feedback.
    - Use this to report task completion, test results, build errors, or summary updates.
 
 2. `mobile_ask(question: str, options: List[str] = ["Approve", "Deny"], timeout_seconds: int = 300)`:
    - Displays interactive touch buttons directly on the user's mobile screen.
    - Blocks execution until the user taps an option on their phone or timeout expires.
-   - Use this before running destructive actions, merging PRs, deploying, or deleting files.
 
 3. `mobile_remote_turn(prompt_context: str, timeout_seconds: int = 600)`:
    - Pushes an update to the user's phone and awaits their next text prompt.
-   - Allows turn-by-turn interactive steering of the desktop session while away from desk.
-
-4. `mobile_get_connection_url()`:
-   - Retrieves the active local Wi-Fi pairing URL and Cloudflare Tunnel 4G/5G remote URL.
