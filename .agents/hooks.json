@@ -1,0 +1,28 @@
+{
+  "remote-permission-gate": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Users\\PMLS\\Documents\\IDE Remote\\scripts\\run_gate.bat\"",
+            "timeout": 310
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Users\\PMLS\\Documents\\IDE Remote\\scripts\\run_post_tool.bat\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

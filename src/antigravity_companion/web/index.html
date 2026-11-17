@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AGY Remote">
+  <link rel="manifest" href="manifest.json">
+  <title>Antigravity Remote Companion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #0b0f19; color: #f1f5f9; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+    
+    /* Top Header */
+    header { background-color: #111827; border-bottom: 1px solid #1f2937; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; padding-top: max(12px, env(safe-area-inset-top)); }
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem; color: #38bdf8; }
+    .brand-icon { width: 22px; height: 22px; fill: #38bdf8; }
+    .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; background-color: #1e293b; color: #94a3b8; font-weight: 500; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; }
+    .status-dot.online { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+
+    /* Messages / Feed */
+    #feed { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+    .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); animation: fadeIn 0.25s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card.alert { border-left: 4px solid #38bdf8; }
+    .card.approval { border-left: 4px solid #f59e0b; background-color: #1e2638; }
+    .card.user-msg { border-left: 4px solid #10b981; align-self: flex-end; max-width: 85%; background-color: #0f2922; }
+
+    .card-title { font-weight: 600; font-size: 0.95rem; color: #e2e8f0; display: flex; align-items: center; gap: 6px; }
+    .card.approval .card-title { color: #fbbf24; }
+    .card-body { font-size: 0.9rem; color: #cbd5e1; line-height: 1.45; word-break: break-word; }
+    .card-time { font-size: 0.72rem; color: #64748b; align-self: flex-end; margin-top: 2px; }
+
+    pre { background-color: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; color: #38bdf8; margin-top: 6px; }
+    
+    /* Interactive Approval Buttons matching Desktop Options */
+    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .btn { width: 100%; padding: 11px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 8px; transition: transform 0.1s, opacity 0.2s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-opt-1 { background-color: #059669; color: #ffffff; }
+    .btn-opt-2 { background-color: #0284c7; color: #ffffff; }
+    .btn-opt-3 { background-color: #6366f1; color: #ffffff; }
+    .btn-opt-4 { background-color: #dc2626; color: #ffffff; }
+    .btn-approve { background-color: #059669; color: #ffffff; }
+    .btn-deny { background-color: #dc2626; color: #ffffff; }
+    .btn-disabled { opacity: 0.4; pointer-events: none; }
+    .resolved-pill { font-size: 0.82rem; font-weight: 600; padding: 8px 12px; border-radius: 6px; display: inline-block; margin-top: 6px; line-height: 1.4; }
+    .resolved-pill.approved { background-color: #064e3b; color: #34d399; }
+    .resolved-pill.denied { background-color: #7f1d1d; color: #f87171; }
+
+    /* Bottom Input Bar */
+    footer { background-color: #111827; border-top: 1px solid #1f2937; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); display: flex; gap: 8px; align-items: center; }
+    #prompt-input { flex: 1; background-color: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 10px 16px; color: #f8fafc; font-size: 0.95rem; outline: none; }
+    #prompt-input:focus { border-color: #38bdf8; }
+    #send-btn { background-color: #2563eb; color: #ffffff; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    #send-btn:active { background-color: #1d4ed8; }
+    #send-btn svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 4l6.5 11h-13L12 6z"/></svg>
+      <span>AGY Remote</span>
+    </div>
+    <div class="status-badge">
+      <div id="status-dot" class="status-dot"></div>
+      <span id="status-text">Connecting...</span>
+    </div>
+  </header>
+
+  <div id="feed">
+    <div class="card alert">
+      <div class="card-title">📱 Antigravity Companion Ready</div>
+      <div class="card-body">Desktop session is active. Prompts and desktop permission cards will appear here in real time.</div>
+      <div class="card-time" id="init-time">Now</div>
+    </div>
+  </div>
+
+  <footer>
+    <input type="text" id="prompt-input" placeholder="Type prompt for Desktop IDE..." autocomplete="off">
+    <button id="send-btn" onclick="sendPrompt()">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </footer>
+
+  <script>
+    const feed = document.getElementById('feed');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const promptInput = document.getElementById('prompt-input');
+
+    // Audio chime using Web Audio API
+    function playChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08); // A5
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } catch (e) {}
+      if (navigator.vibrate) {
+        try { navigator.vibrate([80, 50, 100]); } catch(e) {}
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token') || '';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+    let ws = null;
+
+    function connect() {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        statusDot.className = 'status-dot online';
+        statusText.textContent = 'Desktop Online';
+      };
+
+      ws.onclose = () => {
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Reconnecting...';
+        setTimeout(connect, 2500);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleIncomingMessage(data);
+        } catch(e) {
+          console.error('Invalid message:', event.data);
+        }
+      };
+    }
+
+    function handleIncomingMessage(data) {
+      playChime();
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (data.type === 'notification') {
+        const card = document.createElement('div');
+        card.className = 'card alert';
+        card.innerHTML = `
+          <div class="card-title">🔔 ${escapeHtml(data.title)}</div>
+          <div class="card-body">${escapeHtml(data.message)}</div>
+          ${data.code ? `<pre><code>${escapeHtml(data.code)}</code></pre>` : ''}
+          <div class="card-time">${timeStr}</div>
+        `;
+        feed.appendChild(card);
+      } 
+      else if (data.type === 'approval') {
+        const card = document.createElement('div');
+        card.className = 'card approval';
+        card.id = `approval-${data.id}`;
+        
+        let buttonsHtml = '';
+        (data.options || ['Approve', 'Deny']).forEach((opt, idx) => {
+          let btnClass = 'btn';
+          const lower = opt.toLowerCase();
+          if (opt.startsWith('1.') || lower.includes('allow this time')) {
+            btnClass += ' btn-opt-1';
+          } else if (opt.startsWith('2.') || lower.includes('conversation')) {
+            btnClass += ' btn-opt-2';
+          } else if (opt.startsWith('3.') || lower.includes('always allow')) {
+            btnClass += ' btn-opt-3';
+          } else if (opt.startsWith('4.') || lower.includes('deny') || lower.includes('no')) {
+            btnClass += ' btn-opt-4';
+          } else if (lower.includes('approve') || lower.includes('yes')) {
+            btnClass += ' btn-approve';
+          } else {
+            btnClass += ' btn-deny';
+          }
+          buttonsHtml += `<button class="${btnClass}" onclick="respondApproval('${data.id}', '${escapeHtml(opt)}')">${escapeHtml(opt)}</button>`;
+        });
+
+        let questionHtml = escapeHtml(data.question);
+        if (questionHtml.includes('\n\n')) {
+          const parts = questionHtml.split('\n\n');
+          questionHtml = `<strong>${parts[0]}</strong><pre><code>${parts.slice(1).join('\n\n')}</code></pre>`;
+        }
+
+        card.innerHTML = `
+          <div class="card-title">🛡️ Desktop Permission Request</div>
+          <div class="card-body">${questionHtml}</div>
+          <div class="btn-group" id="btn-group-${data.id}">${buttonsHtml}</div>
+          <div class="card-time">${timeStr}</div>
+        `;
+        feed.appendChild(card);
+      }
+      else if (data.type === 'remote_prompt') {
+        const card = document.createElement('div');
+        card.className = 'card alert';
+        card.innerHTML = `
+          <div class="card-title">💬 Agent Requesting Instruction</div>
+          <div class="card-body">${escapeHtml(data.prompt_context)}</div>
+          <div class="card-time">${timeStr}</div>
+        `;
+        feed.appendChild(card);
+        promptInput.focus();
+      }
+
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function respondApproval(id, decision) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'approval_response', id: id, decision: decision }));
+
+      const btnGroup = document.getElementById(`btn-group-${id}`);
+      if (btnGroup) {
+        const isDeny = decision.toLowerCase().includes('deny') || decision.toLowerCase().includes('no');
+        btnGroup.innerHTML = `<span class="resolved-pill ${isDeny ? 'denied' : 'approved'}">Selected: ${escapeHtml(decision)}</span>`;
+      }
+    }
+
+    function sendPrompt() {
+      const text = promptInput.value.trim();
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+      ws.send(JSON.stringify({ type: 'prompt', text: text }));
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const card = document.createElement('div');
+      card.className = 'card user-msg';
+      card.innerHTML = `
+        <div class="card-body">${escapeHtml(text)}</div>
+        <div class="card-time">${timeStr} (Sent to Desktop)</div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+
+      promptInput.value = '';
+    }
+
+    promptInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendPrompt();
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    document.getElementById('init-time').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    connect();
+  </script>
+</body>
+</html>

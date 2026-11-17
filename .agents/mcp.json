@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "mobile-companion": {
+      "command": "C:/Users/PMLS/Documents/IDE Remote/.venv/Scripts/python.exe",
+      "args": ["-m", "antigravity_companion.server"],
+      "cwd": "C:/Users/PMLS/Documents/IDE Remote"
+    }
+  }
+}
+

@@ -1,0 +1,32 @@
+# Environment & Secrets
+.env
+*.env.local
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Runtime State
+*.log
+scripts/gate.log
+.session_allowed.json
+.single_use_allowed.json
+.config_backup.json
+.allowed_commands.json
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
