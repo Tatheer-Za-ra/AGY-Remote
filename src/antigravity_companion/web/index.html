@@ -115,8 +115,10 @@
     .perm-resolved-badge.approved { background-color: #dafbe1; color: #1a7f37; border: 1px solid #aceebb; }
     .perm-resolved-badge.denied { background-color: #ffebe9; color: #cf222e; border: 1px solid #ff8182; }
 
-    /* Clean Input Bar */
+    /* Clean Input Bar & Continuous Processing Indicator */
     footer { background-color: var(--bg-base); padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    .processing-bar { display: none; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 500; color: var(--brand-blue); background-color: var(--selected-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; margin-bottom: 8px; animation: fadeIn 0.15s ease-out; }
+    .processing-dot { width: 7px; height: 7px; border-radius: 50%; background-color: var(--brand-blue); animation: pulse 1.2s infinite; flex-shrink: 0; }
     .prompt-box { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px; display: flex; align-items: flex-end; padding: 6px 8px 6px 14px; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
     .prompt-box:focus-within { border-color: var(--brand-blue); box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.15); }
     
@@ -164,8 +166,12 @@
     </div>
   </div>
 
-  <!-- Desktop Input Bar -->
+  <!-- Desktop Input Bar with Continuous Processing Indicator -->
   <footer>
+    <div id="processing-bar" class="processing-bar">
+      <div class="processing-dot"></div>
+      <span id="processing-text">Processing...</span>
+    </div>
     <div class="prompt-box">
       <textarea id="prompt-input" rows="1" placeholder="Ask anything..." autocomplete="off"></textarea>
       <button id="action-btn" class="btn-action-circle" onclick="handleActionButton()" title="Send prompt">
@@ -183,6 +189,8 @@
     const actionBtn = document.getElementById('action-btn');
     const iconSend = document.getElementById('icon-send');
     const iconStop = document.getElementById('icon-stop');
+    const processingBar = document.getElementById('processing-bar');
+    const processingText = document.getElementById('processing-text');
 
     let isAgentWorking = false;
     let selectedPermOption = {};
@@ -253,6 +261,9 @@
         row.className = 'step-item active';
         row.innerHTML = `<div class="step-pulse"></div><span>${codeIconHtml}${escapeHtml(step.label)}</span>`;
         container.appendChild(row);
+        if (processingText) {
+          processingText.innerText = 'Processing: ' + step.label;
+        }
       }
 
       feed.scrollTop = feed.scrollHeight;
@@ -265,6 +276,11 @@
         iconSend.style.display = 'none';
         iconStop.style.display = 'block';
 
+        if (processingBar) {
+          processingBar.style.display = 'flex';
+          processingText.innerText = detail ? 'Processing: ' + detail : 'Processing...';
+        }
+
         if (detail) {
           addInlineProgressStep({ step_type: 'tool_start', label: detail });
         }
@@ -273,6 +289,10 @@
         actionBtn.classList.remove('working');
         iconSend.style.display = 'block';
         iconStop.style.display = 'none';
+
+        if (processingBar) {
+          processingBar.style.display = 'none';
+        }
 
         // Add "Waiting for user input" step pill (matching desktop IDE)
         if (activeStepsContainer) {
@@ -302,6 +322,12 @@
 
       // Append user message card
       appendUserMessage(text, promptId, isAgentWorking);
+
+      // Start showing processing indicator immediately
+      if (processingBar) {
+        processingBar.style.display = 'flex';
+        processingText.innerText = 'Processing...';
+      }
 
       // Fresh inline step container for this prompt
       activeStepsContainer = document.createElement('div');
