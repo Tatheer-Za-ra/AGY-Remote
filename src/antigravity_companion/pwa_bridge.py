@@ -150,6 +150,13 @@ class PWABridge:
         }
         await self.broadcast(payload)
 
+    async def notify_shutdown(self, message: str = "Remote companion session has ended cleanly. Desktop permissions have reverted to standard review."):
+        await self.broadcast({
+            "type": "companion_shutdown",
+            "message": message
+        })
+        await asyncio.sleep(0.5)
+
     async def ask_approval(self, question: str, options: Optional[List[str]] = None, timeout: int = 300, title: Optional[str] = None, target: Optional[str] = None) -> str:
         if not options:
             options = ["Approve", "Deny"]

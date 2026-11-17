@@ -53,6 +53,12 @@ async def api_remote_turn(payload: dict):
     instruction = await bridge.wait_for_instruction(prompt_context, timeout=timeout)
     return {"instruction": instruction}
 
+@app.post("/api/shutdown")
+async def api_shutdown(payload: dict = {}):
+    message = payload.get("message", "Remote companion session has ended cleanly. Desktop permissions have reverted to standard review.")
+    await bridge.notify_shutdown(message)
+    return {"status": "shutdown_notified"}
+
 @app.post("/api/progress")
 async def api_progress(payload: dict):
     step_type = payload.get("step_type", "tool_start")
