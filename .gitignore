@@ -24,6 +24,7 @@ scripts/gate.log
 .single_use_allowed.json
 .config_backup.json
 .allowed_commands.json
+.companion_active
 
 # IDE & OS Files
 .vscode/

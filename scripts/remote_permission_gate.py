@@ -19,11 +19,17 @@ def log(msg: str):
         pass
 
 def is_companion_mode_on() -> bool:
+    marker = PROJECT_ROOT / ".companion_active"
+    if marker.exists():
+        return True
     try:
-        resp = httpx.get("http://127.0.0.1:8765/manifest.json", timeout=1.0)
-        return resp.status_code == 200
+        resp = httpx.get("http://127.0.0.1:8765/manifest.json", timeout=0.2)
+        if resp.status_code == 200:
+            marker.write_text("1")
+            return True
     except Exception:
-        return False
+        pass
+    return False
 
 def is_sensitive_file(file_path: str) -> bool:
     name = Path(file_path).name.lower()

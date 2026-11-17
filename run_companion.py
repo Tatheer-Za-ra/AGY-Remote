@@ -12,9 +12,15 @@ from src.antigravity_companion.permissions import setup_companion_grants, revert
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("companion_daemon")
 
+PROJECT_ROOT = config.workspace_root if hasattr(config, 'workspace_root') else Path(__file__).parent
+
 def cleanup():
     logger.info("Cleaning up Companion Mode grants before shutdown...")
     revert_companion_grants()
+    try:
+        (PROJECT_ROOT / ".companion_active").unlink(missing_ok=True)
+    except Exception:
+        pass
 
 atexit.register(cleanup)
 
@@ -30,6 +36,10 @@ except Exception:
 
 def main():
     logger.info("Starting Antigravity Mobile Companion Daemon...")
+    try:
+        (PROJECT_ROOT / ".companion_active").write_text("1")
+    except Exception:
+        pass
     # 1. Setup automatic permissions for companion infrastructure
     setup_companion_grants()
 
