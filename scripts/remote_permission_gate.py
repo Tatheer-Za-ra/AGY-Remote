@@ -35,6 +35,44 @@ def is_sensitive_file(file_path: str) -> bool:
         return True
     return False
 
+def emit_user_progress(tool_name: str, args: dict):
+    """Emits clean, high-level task progress for the end user on mobile (skips internal companion noise)."""
+    try:
+        label = ""
+        if tool_name == "read_file":
+            fp = Path(args.get("Path", "")).name
+            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use"]):
+                label = f"Analyzing {fp}..."
+        elif tool_name in ["write_file", "edit_file"]:
+            fp = Path(args.get("Path", "")).name
+            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use"]):
+                label = f"Updating {fp}..."
+        elif tool_name == "run_command":
+            cmd = args.get("CommandLine", "").strip()
+            if any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem"]):
+                return
+            if "python" in cmd.lower():
+                parts = cmd.split()
+                script = [p for p in parts if p.endswith(".py")]
+                label = f"Running {Path(script[0]).name}..." if script else "Running script..."
+            elif cmd.startswith("git"):
+                parts = cmd.split()
+                sub = parts[1] if len(parts) > 1 else ""
+                label = f"Running git {sub}..."
+            elif "npm" in cmd.lower():
+                label = "Running npm command..."
+            else:
+                label = f"Executing command..."
+        
+        if label:
+            httpx.post("http://127.0.0.1:8765/api/progress", json={
+                "step_type": "tool_start",
+                "label": label,
+                "detail": ""
+            }, timeout=0.4)
+    except Exception:
+        pass
+
 def main():
     try:
         raw_input = sys.stdin.read()
@@ -82,6 +120,9 @@ def main():
         )
 
         current_grants = get_current_grants()
+
+        # Emit user-friendly progress to mobile
+        emit_user_progress(tool_name, args)
 
         # 4. Handle File Access Tools (read_file, write_file, edit_file)
         if tool_name in ["read_file", "write_file", "edit_file"]:

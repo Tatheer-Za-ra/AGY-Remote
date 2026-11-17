@@ -3,90 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#12151c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AGY Remote">
   <link rel="manifest" href="manifest.json">
-  <title>Antigravity Remote Companion</title>
+  <title>Antigravity IDE Remote Companion</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: #0b0f19; color: #f1f5f9; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+    body { background-color: #12151c; color: #f0f3f6; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
     
-    /* Top Header */
-    header { background-color: #111827; border-bottom: 1px solid #1f2937; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 10; padding-top: max(12px, env(safe-area-inset-top)); }
-    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem; color: #38bdf8; }
-    .brand-icon { width: 22px; height: 22px; fill: #38bdf8; }
-    .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; background-color: #1e293b; color: #94a3b8; font-weight: 500; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; }
-    .status-dot.online { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
-
-    /* Messages / Feed */
-    #feed { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
-    .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); animation: fadeIn 0.25s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    .card.alert { border-left: 4px solid #38bdf8; }
-    .card.approval { border-left: 4px solid #f59e0b; background-color: #1e2638; }
-    .card.user-msg { border-left: 4px solid #10b981; align-self: flex-end; max-width: 85%; background-color: #0f2922; }
-
-    .card-title { font-weight: 600; font-size: 0.95rem; color: #e2e8f0; display: flex; align-items: center; gap: 6px; }
-    .card.approval .card-title { color: #fbbf24; }
-    .card-body { font-size: 0.9rem; color: #cbd5e1; line-height: 1.45; word-break: break-word; }
-    .card-time { font-size: 0.72rem; color: #64748b; align-self: flex-end; margin-top: 2px; }
-
-    pre { background-color: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; color: #38bdf8; margin-top: 6px; }
+    /* Top Header matching Desktop IDE */
+    header { background-color: #161a23; border-bottom: 1px solid #1f2430; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 20; padding-top: max(10px, env(safe-area-inset-top)); }
+    .header-left { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; color: #e6edf3; }
+    .ide-logo { width: 18px; height: 18px; fill: #388bfd; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 3px 8px; border-radius: 999px; background-color: #1f2430; color: #8b949e; font-weight: 500; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background-color: #f85149; }
+    .status-dot.online { background-color: #3fb950; box-shadow: 0 0 6px #3fb950; }
     
-    /* Interactive Approval Buttons matching Desktop Options */
-    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-    .btn { width: 100%; padding: 11px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 8px; transition: transform 0.1s, opacity 0.2s; }
-    .btn:active { transform: scale(0.98); }
-    .btn-opt-1 { background-color: #059669; color: #ffffff; }
-    .btn-opt-2 { background-color: #0284c7; color: #ffffff; }
-    .btn-opt-3 { background-color: #6366f1; color: #ffffff; }
-    .btn-opt-4 { background-color: #dc2626; color: #ffffff; }
-    .btn-approve { background-color: #059669; color: #ffffff; }
-    .btn-deny { background-color: #dc2626; color: #ffffff; }
-    .btn-disabled { opacity: 0.4; pointer-events: none; }
-    .resolved-pill { font-size: 0.82rem; font-weight: 600; padding: 8px 12px; border-radius: 6px; display: inline-block; margin-top: 6px; line-height: 1.4; }
-    .resolved-pill.approved { background-color: #064e3b; color: #34d399; }
-    .resolved-pill.denied { background-color: #7f1d1d; color: #f87171; }
+    /* Live Desktop Activity Accordion / Step Stream */
+    #activity-container { background-color: #161a23; border-bottom: 1px solid #1f2430; padding: 8px 16px; display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; }
+    .activity-header { display: flex; align-items: center; justify-content: space-between; color: #8b949e; cursor: pointer; user-select: none; }
+    .activity-title { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+    .activity-pulse { width: 6px; height: 6px; border-radius: 50%; background-color: #58a6ff; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.4; transform: scale(0.9); } }
+    .activity-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+    .activity-step { display: flex; align-items: center; gap: 6px; color: #8b949e; font-size: 0.78rem; }
+    .activity-step.active { color: #58a6ff; font-weight: 500; }
+    .activity-step.done { color: #6e7681; }
+    .step-icon { font-size: 0.75rem; }
 
-    /* Bottom Input Bar */
-    footer { background-color: #111827; border-top: 1px solid #1f2937; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); display: flex; gap: 8px; align-items: center; }
-    #prompt-input { flex: 1; background-color: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 10px 16px; color: #f8fafc; font-size: 0.95rem; outline: none; }
-    #prompt-input:focus { border-color: #38bdf8; }
-    #send-btn { background-color: #2563eb; color: #ffffff; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-    #send-btn:active { background-color: #1d4ed8; }
-    #send-btn svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
+    /* Queue Banner */
+    #queue-banner { display: none; background-color: #1f2b3f; border-bottom: 1px solid #388bfd33; padding: 8px 16px; font-size: 0.8rem; color: #58a6ff; display: flex; align-items: center; justify-content: space-between; }
+    .queue-badge { background-color: #388bfd; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-right: 6px; }
+
+    /* Feed Canvas */
+    #feed { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+    
+    /* Desktop-Style Message Cards */
+    .card { background-color: #1a1e28; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .card.user-msg { background-color: #1e2638; border: 1px solid #388bfd44; align-self: flex-end; max-width: 85%; }
+    .card.user-msg .card-title { color: #58a6ff; font-size: 0.78rem; margin-bottom: 2px; }
+    .card.agent-msg { background-color: #1a1e28; align-self: flex-start; max-width: 95%; }
+    .card-title { font-weight: 600; font-size: 0.9rem; color: #e6edf3; display: flex; align-items: center; gap: 6px; }
+    .card-body { font-size: 0.88rem; color: #c9d1d9; line-height: 1.45; word-break: break-word; white-space: pre-wrap; }
+    .card-time { font-size: 0.7rem; color: #6e7681; align-self: flex-end; margin-top: 2px; }
+
+    /* Exact Desktop Antigravity Permission Card */
+    .card.permission-card { background-color: #1a1e28; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .perm-header { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.92rem; color: #f0f3f6; margin-bottom: 8px; }
+    .perm-code-box { background-color: #0f1218; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; color: #58a6ff; word-break: break-all; margin-bottom: 12px; }
+    
+    .perm-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .perm-option-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; background-color: #161a23; border: 1px solid transparent; cursor: pointer; transition: all 0.15s; }
+    .perm-option-row:active, .perm-option-row.selected { background-color: #21283b; border-color: #388bfd; }
+    .perm-num-badge { width: 22px; height: 22px; border-radius: 6px; background-color: #283145; color: #58a6ff; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .perm-option-row.selected .perm-num-badge { background-color: #388bfd; color: #ffffff; }
+    .perm-opt-text { font-size: 0.82rem; color: #c9d1d9; line-height: 1.35; flex: 1; }
+    
+    .perm-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+    .perm-btn-skip { background: transparent; border: none; color: #8b949e; font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 6px; cursor: pointer; }
+    .perm-btn-submit { background-color: #388bfd; color: #ffffff; border: none; font-size: 0.82rem; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .perm-btn-submit:active { background-color: #1f6feb; }
+    
+    .perm-resolved-badge { font-size: 0.8rem; font-weight: 600; padding: 8px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; }
+    .perm-resolved-badge.approved { background-color: #1b3828; color: #3fb950; border: 1px solid #238636; }
+    .perm-resolved-badge.denied { background-color: #3d1f24; color: #f85149; border: 1px solid #da3633; }
+
+    /* Exact Desktop Input Container */
+    footer { background-color: #12151c; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    .desktop-input-container { background-color: #1a1e28; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    .desktop-input-container:focus-within { border-color: #388bfd66; box-shadow: 0 0 0 1px #388bfd44; }
+    
+    /* Multiline textarea */
+    #prompt-input { width: 100%; background: transparent; border: none; padding: 12px 14px 6px 14px; color: #f0f3f6; font-size: 0.92rem; line-height: 1.45; resize: none; outline: none; min-height: 42px; max-height: 120px; overflow-y: auto; }
+    #prompt-input::placeholder { color: #6e7681; }
+
+    /* Controls row matching Desktop IDE */
+    .input-controls-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 8px 10px; }
+    .controls-left { display: flex; align-items: center; gap: 8px; }
+    .btn-attach { background: transparent; border: none; color: #8b949e; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .model-pill { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #8b949e; background-color: #161a23; border: 1px solid rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 6px; user-select: none; }
+    
+    .controls-right { display: flex; align-items: center; }
+    .btn-action-circle { width: 32px; height: 32px; border-radius: 50%; border: none; background-color: #388bfd; color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+    .btn-action-circle:active { transform: scale(0.94); }
+    .btn-action-circle.working { background-color: #f85149; }
+    .btn-action-circle svg { width: 15px; height: 15px; fill: white; }
   </style>
 </head>
 <body>
 
+  <!-- Top Header matching Desktop IDE -->
   <header>
-    <div class="brand">
-      <svg class="brand-icon" viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 4l6.5 11h-13L12 6z"/></svg>
-      <span>AGY Remote</span>
+    <div class="header-left">
+      <svg class="ide-logo" viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2zm0 4l6.5 11h-13L12 6z"/></svg>
+      <span>Antigravity IDE Remote</span>
     </div>
-    <div class="status-badge">
-      <div id="status-dot" class="status-dot"></div>
-      <span id="status-text">Connecting...</span>
+    <div class="header-right">
+      <div class="status-badge">
+        <div id="status-dot" class="status-dot"></div>
+        <span id="status-text">Connecting...</span>
+      </div>
     </div>
   </header>
 
+  <!-- Live Activity Accordion (Desktop Step Stream) -->
+  <div id="activity-container">
+    <div class="activity-header" onclick="toggleActivity()">
+      <div class="activity-title">
+        <div class="activity-pulse"></div>
+        <span id="current-agent-state">Waiting for user input...</span>
+      </div>
+      <span id="activity-toggle-icon">▾</span>
+    </div>
+    <div id="activity-list" class="activity-list"></div>
+  </div>
+
+  <!-- Queue Banner -->
+  <div id="queue-banner" style="display: none;">
+    <div><span class="queue-badge" id="queue-count">0</span><span id="queue-text">Prompts queued for next turn</span></div>
+  </div>
+
+  <!-- Main Chat / Messages Feed -->
   <div id="feed">
-    <div class="card alert">
+    <div class="card agent-msg">
       <div class="card-title">📱 Antigravity Companion Ready</div>
-      <div class="card-body">Desktop session is active. Prompts and desktop permission cards will appear here in real time.</div>
-      <div class="card-time" id="init-time">Now</div>
+      <div class="card-body">Desktop IDE session is active. Prompts and execution approvals are routed to your phone in real time.</div>
+      <div class="card-time" id="init-time">Connected</div>
     </div>
   </div>
 
+  <!-- Desktop-Style Chat Input Box -->
   <footer>
-    <input type="text" id="prompt-input" placeholder="Type prompt for Desktop IDE..." autocomplete="off">
-    <button id="send-btn" onclick="sendPrompt()">
-      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
+    <div class="desktop-input-container">
+      <textarea id="prompt-input" rows="1" placeholder="Ask anything, @ to mention, / for actions" autocomplete="off"></textarea>
+      <div class="input-controls-row">
+        <div class="controls-left">
+          <button class="btn-attach" title="Add Context">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </button>
+          <div class="model-pill">
+            <span>Gemini 3.8 Flash High</span>
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </div>
+        </div>
+        <div class="controls-right">
+          <button id="action-btn" class="btn-action-circle" onclick="handleActionButton()" title="Send prompt">
+            <!-- Upward Arrow Icon (Send) -->
+            <svg id="icon-send" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+            <!-- Square Stop Icon (when agent working) -->
+            <svg id="icon-stop" viewBox="0 0 24 24" style="display: none;"><path d="M6 6h12v12H6z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </footer>
 
   <script>
@@ -94,8 +168,204 @@
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
     const promptInput = document.getElementById('prompt-input');
+    const currentAgentState = document.getElementById('current-agent-state');
+    const activityList = document.getElementById('activity-list');
+    const queueBanner = document.getElementById('queue-banner');
+    const queueCount = document.getElementById('queue-count');
+    const actionBtn = document.getElementById('action-btn');
+    const iconSend = document.getElementById('icon-send');
+    const iconStop = document.getElementById('icon-stop');
 
-    // Audio chime using Web Audio API
+    let isAgentWorking = false;
+    let selectedPermOption = {};
+
+    // Auto-resize textarea as user types newlines
+    promptInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Enter Key inserts a newline on mobile virtual keyboard!
+    // Does NOT submit unless user presses Ctrl+Enter or Cmd+Enter on physical keyboards.
+    promptInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        submitPrompt();
+      }
+    });
+
+    function toggleActivity() {
+      const isHidden = activityList.style.display === 'none';
+      activityList.style.display = isHidden ? 'flex' : 'none';
+      document.getElementById('activity-toggle-icon').innerText = isHidden ? '▾' : '▸';
+    }
+
+    function setAgentState(state, detail) {
+      if (state === 'working') {
+        isAgentWorking = true;
+        currentAgentState.innerText = detail || 'Working...';
+        actionBtn.classList.add('working');
+        iconSend.style.display = 'none';
+        iconStop.style.display = 'block';
+      } else if (state === 'thinking') {
+        isAgentWorking = true;
+        currentAgentState.innerText = detail || 'Thinking...';
+        actionBtn.classList.add('working');
+        iconSend.style.display = 'none';
+        iconStop.style.display = 'block';
+      } else {
+        isAgentWorking = false;
+        currentAgentState.innerText = 'Waiting for user input...';
+        actionBtn.classList.remove('working');
+        iconSend.style.display = 'block';
+        iconStop.style.display = 'none';
+      }
+    }
+
+    function addActivityStep(step) {
+      const stepRow = document.createElement('div');
+      stepRow.className = 'activity-step ' + (step.step_type === 'tool_start' ? 'active' : 'done');
+      stepRow.innerHTML = `<span class="step-icon">${step.step_type === 'tool_start' ? '⚡' : '✓'}</span><span>${escapeHtml(step.label)}</span>`;
+      activityList.prepend(stepRow);
+      if (activityList.children.length > 5) {
+        activityList.removeChild(activityList.lastChild);
+      }
+      if (step.step_type === 'tool_start') {
+        currentAgentState.innerText = step.label;
+      }
+    }
+
+    function handleActionButton() {
+      if (isAgentWorking) {
+        // Stop/interrupt action
+        sendStopRequest();
+      } else {
+        submitPrompt();
+      }
+    }
+
+    function submitPrompt() {
+      const text = promptInput.value.trim();
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+      ws.send(JSON.stringify({ type: 'prompt', text: text }));
+
+      // Append user message card
+      appendUserMessage(text);
+
+      promptInput.value = '';
+      promptInput.style.height = 'auto';
+    }
+
+    function sendStopRequest() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'prompt', text: 'terminate that script' }));
+      appendUserMessage('🛑 Interrupt / Terminate requested');
+    }
+
+    function appendUserMessage(text) {
+      const card = document.createElement('div');
+      card.className = 'card user-msg';
+      card.innerHTML = `
+        <div class="card-title">You (via Mobile)</div>
+        <div class="card-body">${escapeHtml(text)}</div>
+        <div class="card-time">${formatTime()}</div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function renderPermissionCard(item) {
+      playChime();
+      const card = document.createElement('div');
+      card.className = 'card permission-card';
+      card.id = `approval-${item.id}`;
+
+      selectedPermOption[item.id] = item.options[0] || '1. Yes, allow this time';
+
+      let optionsHtml = '';
+      item.options.forEach((opt, idx) => {
+        const num = idx + 1;
+        const isSelected = idx === 0 ? 'selected' : '';
+        optionsHtml += `
+          <div class="perm-option-row ${isSelected}" id="opt-${item.id}-${idx}" onclick="selectPermOption('${item.id}', ${idx}, '${escapeHtml(opt)}')">
+            <div class="perm-num-badge">${num}</div>
+            <div class="perm-opt-text">${escapeHtml(opt)}</div>
+          </div>
+        `;
+      });
+
+      card.innerHTML = `
+        <div class="perm-header">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#58a6ff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span>Permission Required</span>
+        </div>
+        <div class="perm-code-box">${escapeHtml(item.question)}</div>
+        <div class="perm-options" id="opts-${item.id}">${optionsHtml}</div>
+        <div class="perm-actions" id="actions-${item.id}">
+          <button class="perm-btn-skip" onclick="submitDecision('${item.id}', 'Skip')">Skip</button>
+          <button class="perm-btn-submit" onclick="submitChosenDecision('${item.id}')">Submit ↵</button>
+        </div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function selectPermOption(approvalId, optIndex, optText) {
+      selectedPermOption[approvalId] = optText;
+      const container = document.getElementById(`opts-${approvalId}`);
+      if (container) {
+        const rows = container.querySelectorAll('.perm-option-row');
+        rows.forEach((r, idx) => {
+          if (idx === optIndex) r.classList.add('selected');
+          else r.classList.remove('selected');
+        });
+      }
+    }
+
+    function submitChosenDecision(approvalId) {
+      const choice = selectedPermOption[approvalId] || '1. Yes, allow this time';
+      submitDecision(approvalId, choice);
+    }
+
+    function submitDecision(approvalId, decision) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'approval_response', id: approvalId, decision: decision }));
+
+      const card = document.getElementById(`approval-${approvalId}`);
+      if (card) {
+        const actions = document.getElementById(`actions-${approvalId}`);
+        const opts = document.getElementById(`opts-${approvalId}`);
+        if (actions) actions.style.display = 'none';
+        if (opts) opts.style.opacity = '0.5';
+
+        const isDeny = decision.toLowerCase().includes('deny') || decision.toLowerCase().includes('no');
+        const badge = document.createElement('div');
+        badge.className = `perm-resolved-badge ${isDeny ? 'denied' : 'approved'}`;
+        badge.innerHTML = `${isDeny ? '✗' : '✓'} ${escapeHtml(decision)}`;
+        card.appendChild(badge);
+      }
+    }
+
+    function updateQueueDisplay(queue) {
+      if (queue && queue.length > 0) {
+        queueBanner.style.display = 'flex';
+        queueCount.innerText = queue.length;
+      } else {
+        queueBanner.style.display = 'none';
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function formatTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
     function playChime() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -104,8 +374,8 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08); // A5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08);
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
         osc.start();
@@ -116,146 +386,66 @@
       }
     }
 
+    // WebSocket Setup
+    let ws = null;
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token') || '';
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
-    let ws = null;
 
-    function connect() {
+    function connectWS() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
+
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         statusDot.className = 'status-dot online';
-        statusText.textContent = 'Desktop Online';
+        statusText.innerText = 'Connected';
       };
 
       ws.onclose = () => {
         statusDot.className = 'status-dot';
-        statusText.textContent = 'Reconnecting...';
-        setTimeout(connect, 2500);
+        statusText.innerText = 'Reconnecting...';
+        setTimeout(connectWS, 2500);
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          handleIncomingMessage(data);
-        } catch(e) {
-          console.error('Invalid message:', event.data);
+
+          if (data.type === 'init_state') {
+            setAgentState(data.agent_state);
+            updateQueueDisplay(data.queue);
+            if (data.recent_steps) {
+              data.recent_steps.forEach(s => addActivityStep(s));
+            }
+          } else if (data.type === 'progress_step') {
+            addActivityStep(data.step);
+          } else if (data.type === 'agent_state') {
+            setAgentState(data.state, data.detail);
+          } else if (data.type === 'queue_update') {
+            updateQueueDisplay(data.queue);
+          } else if (data.type === 'approval') {
+            renderPermissionCard(data);
+          } else if (data.type === 'notification') {
+            playChime();
+            const card = document.createElement('div');
+            card.className = 'card agent-msg';
+            card.innerHTML = `
+              <div class="card-title">${escapeHtml(data.title)}</div>
+              <div class="card-body">${escapeHtml(data.message)}</div>
+              ${data.code ? `<div class="perm-code-box">${escapeHtml(data.code)}</div>` : ''}
+              <div class="card-time">${formatTime()}</div>
+            `;
+            feed.appendChild(card);
+            feed.scrollTop = feed.scrollHeight;
+          }
+        } catch (e) {
+          console.error('Error handling message:', e);
         }
       };
     }
 
-    function handleIncomingMessage(data) {
-      playChime();
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (data.type === 'notification') {
-        const card = document.createElement('div');
-        card.className = 'card alert';
-        card.innerHTML = `
-          <div class="card-title">🔔 ${escapeHtml(data.title)}</div>
-          <div class="card-body">${escapeHtml(data.message)}</div>
-          ${data.code ? `<pre><code>${escapeHtml(data.code)}</code></pre>` : ''}
-          <div class="card-time">${timeStr}</div>
-        `;
-        feed.appendChild(card);
-      } 
-      else if (data.type === 'approval') {
-        const card = document.createElement('div');
-        card.className = 'card approval';
-        card.id = `approval-${data.id}`;
-        
-        let buttonsHtml = '';
-        (data.options || ['Approve', 'Deny']).forEach((opt, idx) => {
-          let btnClass = 'btn';
-          const lower = opt.toLowerCase();
-          if (opt.startsWith('1.') || lower.includes('allow this time')) {
-            btnClass += ' btn-opt-1';
-          } else if (opt.startsWith('2.') || lower.includes('conversation')) {
-            btnClass += ' btn-opt-2';
-          } else if (opt.startsWith('3.') || lower.includes('always allow')) {
-            btnClass += ' btn-opt-3';
-          } else if (opt.startsWith('4.') || lower.includes('deny') || lower.includes('no')) {
-            btnClass += ' btn-opt-4';
-          } else if (lower.includes('approve') || lower.includes('yes')) {
-            btnClass += ' btn-approve';
-          } else {
-            btnClass += ' btn-deny';
-          }
-          buttonsHtml += `<button class="${btnClass}" onclick="respondApproval('${data.id}', '${escapeHtml(opt)}')">${escapeHtml(opt)}</button>`;
-        });
-
-        let questionHtml = escapeHtml(data.question);
-        if (questionHtml.includes('\n\n')) {
-          const parts = questionHtml.split('\n\n');
-          questionHtml = `<strong>${parts[0]}</strong><pre><code>${parts.slice(1).join('\n\n')}</code></pre>`;
-        }
-
-        card.innerHTML = `
-          <div class="card-title">🛡️ Desktop Permission Request</div>
-          <div class="card-body">${questionHtml}</div>
-          <div class="btn-group" id="btn-group-${data.id}">${buttonsHtml}</div>
-          <div class="card-time">${timeStr}</div>
-        `;
-        feed.appendChild(card);
-      }
-      else if (data.type === 'remote_prompt') {
-        const card = document.createElement('div');
-        card.className = 'card alert';
-        card.innerHTML = `
-          <div class="card-title">💬 Agent Requesting Instruction</div>
-          <div class="card-body">${escapeHtml(data.prompt_context)}</div>
-          <div class="card-time">${timeStr}</div>
-        `;
-        feed.appendChild(card);
-        promptInput.focus();
-      }
-
-      feed.scrollTop = feed.scrollHeight;
-    }
-
-    function respondApproval(id, decision) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: 'approval_response', id: id, decision: decision }));
-
-      const btnGroup = document.getElementById(`btn-group-${id}`);
-      if (btnGroup) {
-        const isDeny = decision.toLowerCase().includes('deny') || decision.toLowerCase().includes('no');
-        btnGroup.innerHTML = `<span class="resolved-pill ${isDeny ? 'denied' : 'approved'}">Selected: ${escapeHtml(decision)}</span>`;
-      }
-    }
-
-    function sendPrompt() {
-      const text = promptInput.value.trim();
-      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-      ws.send(JSON.stringify({ type: 'prompt', text: text }));
-
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const card = document.createElement('div');
-      card.className = 'card user-msg';
-      card.innerHTML = `
-        <div class="card-body">${escapeHtml(text)}</div>
-        <div class="card-time">${timeStr} (Sent to Desktop)</div>
-      `;
-      feed.appendChild(card);
-      feed.scrollTop = feed.scrollHeight;
-
-      promptInput.value = '';
-    }
-
-    promptInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendPrompt();
-    });
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    document.getElementById('init-time').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    connect();
+    connectWS();
   </script>
 </body>
 </html>

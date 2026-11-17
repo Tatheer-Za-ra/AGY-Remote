@@ -51,11 +51,34 @@ async def api_remote_turn(payload: dict):
     instruction = await bridge.wait_for_instruction(prompt_context, timeout=timeout)
     return {"instruction": instruction}
 
+@app.post("/api/progress")
+async def api_progress(payload: dict):
+    step_type = payload.get("step_type", "tool_start")
+    label = payload.get("label", "")
+    detail = payload.get("detail", "")
+    await bridge.broadcast_step(step_type, label, detail)
+    return {"status": "broadcasted"}
+
+@app.post("/api/agent_state")
+async def api_agent_state(payload: dict):
+    state = payload.get("state", "idle")
+    detail = payload.get("detail", "")
+    await bridge.broadcast_agent_state(state, detail)
+    return {"status": "broadcasted"}
+
+@app.get("/api/state")
+async def api_get_state():
+    return {
+        "agent_state": bridge._agent_state,
+        "active_step": bridge._active_step,
+        "recent_steps": bridge._recent_steps[-10:],
+        "queue": bridge._queued_prompts
+    }
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str = Query(None)):
-    # Validate token for security
     if token != config.secret_token:
-        await websocket.close(code=1008) # Policy Violation
+        await websocket.close(code=1008)
         return
 
     await bridge.connect(websocket)
@@ -67,4 +90,3 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None)):
         bridge.disconnect(websocket)
     except Exception:
         bridge.disconnect(websocket)
-
