@@ -105,7 +105,7 @@ class PWABridge:
             if not text:
                 return
 
-            prompt_id = str(uuid.uuid4())[:8]
+            prompt_id = message.get("id") or str(uuid.uuid4())[:8]
             logger.info(f"Incoming mobile prompt [{prompt_id}]: '{text}'")
 
             # If listener is actively waiting, fulfill it immediately
