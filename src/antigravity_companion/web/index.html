@@ -73,7 +73,6 @@
     .steps-container { display: flex; flex-direction: column; gap: 3px; padding: 2px 4px; margin: 2px 0; }
     .step-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; animation: fadeIn 0.15s ease-out; }
     .step-item.active { color: var(--brand-blue); font-weight: 500; }
-    .step-item.waiting { color: var(--text-muted); font-style: italic; margin-top: 3px; }
     .step-pulse { width: 6px; height: 6px; border-radius: 50%; background-color: var(--brand-blue); animation: pulse 1.4s infinite; flex-shrink: 0; }
     @keyframes pulse { 0% { opacity: 0.3; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0.3; transform: scale(0.85); } }
     .step-code-badge { color: #cf222e; font-weight: 700; font-size: 0.75rem; letter-spacing: -0.5px; }
@@ -369,12 +368,21 @@
           processingBar.style.display = 'none';
         }
 
-        // Add "Waiting for user input" step pill (matching desktop IDE)
+        // Complete any active inline step and close the container cleanly
         if (activeStepsContainer) {
-          const waitingRow = document.createElement('div');
-          waitingRow.className = 'step-item waiting';
-          waitingRow.innerText = 'Waiting for user input';
-          activeStepsContainer.appendChild(waitingRow);
+          const prevActive = activeStepsContainer.querySelector('.step-item.active');
+          if (prevActive) {
+            prevActive.classList.remove('active');
+            prevActive.classList.add('done');
+            const pulse = prevActive.querySelector('.step-pulse');
+            if (pulse) pulse.remove();
+            if (!prevActive.querySelector('.step-chevron')) {
+              const chev = document.createElement('span');
+              chev.className = 'step-chevron';
+              chev.innerText = '>';
+              prevActive.appendChild(chev);
+            }
+          }
           activeStepsContainer = null;
         }
       }

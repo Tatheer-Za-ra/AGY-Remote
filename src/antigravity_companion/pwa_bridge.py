@@ -216,7 +216,7 @@ class PWABridge:
             }
             await self.broadcast(payload)
 
-        await self.broadcast_agent_state("idle", "Waiting for user input...")
+        await self.broadcast_agent_state("idle", "")
 
         try:
             result = await asyncio.wait_for(future, timeout=float(timeout))
