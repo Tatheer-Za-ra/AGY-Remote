@@ -117,6 +117,17 @@
 
     /* Clean Input Bar & Continuous Processing Indicator */
     footer { background-color: var(--bg-base); padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    
+    /* Floating Queued Prompts Container (matching Desktop AGY) */
+    .floating-queue-container { display: none; flex-direction: column; gap: 6px; margin-bottom: 8px; animation: slideUp 0.18s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .floating-queue-card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-left: 3px solid #d4a72c; border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .floating-queue-header { display: flex; align-items: center; justify-content: space-between; }
+    .floating-queue-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: #9a6700; background-color: #fff8c5; padding: 2px 7px; border-radius: 999px; border: 1px solid #d4a72c44; }
+    [data-theme="dark"] .floating-queue-badge { color: #f0c654; background-color: #382e16; border-color: #7d6320; }
+    .floating-queue-hint { font-size: 0.7rem; color: var(--text-dim); }
+    .floating-queue-text { font-size: 0.84rem; color: var(--text-main); white-space: pre-wrap; word-break: break-word; max-height: 60px; overflow-y: auto; }
+
     .processing-bar { display: none; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 500; color: var(--brand-blue); background-color: var(--selected-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; margin-bottom: 8px; animation: fadeIn 0.15s ease-out; }
     .processing-dot { width: 7px; height: 7px; border-radius: 50%; background-color: var(--brand-blue); animation: pulse 1.2s infinite; flex-shrink: 0; }
     .prompt-box { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px; display: flex; align-items: flex-end; padding: 6px 8px 6px 14px; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
@@ -166,8 +177,9 @@
     </div>
   </div>
 
-  <!-- Desktop Input Bar with Continuous Processing Indicator -->
+  <!-- Desktop Input Bar with Floated Queued Prompts & Continuous Processing Indicator -->
   <footer>
+    <div id="floating-queue-container" class="floating-queue-container"></div>
     <div id="processing-bar" class="processing-bar">
       <div class="processing-dot"></div>
       <span id="processing-text">Processing...</span>
@@ -191,10 +203,72 @@
     const iconStop = document.getElementById('icon-stop');
     const processingBar = document.getElementById('processing-bar');
     const processingText = document.getElementById('processing-text');
+    const floatingQueueContainer = document.getElementById('floating-queue-container');
 
     let isAgentWorking = false;
     let selectedPermOption = {};
     let activeStepsContainer = null;
+    let queuedPromptsList = [];
+
+    function renderFloatingQueue() {
+      if (!floatingQueueContainer) return;
+      floatingQueueContainer.innerHTML = '';
+      if (!queuedPromptsList || queuedPromptsList.length === 0) {
+        floatingQueueContainer.style.display = 'none';
+        return;
+      }
+
+      floatingQueueContainer.style.display = 'flex';
+      queuedPromptsList.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'floating-queue-card';
+        card.id = `queue-card-${item.id}`;
+        card.innerHTML = `
+          <div class="floating-queue-header">
+            <span class="floating-queue-badge">⏳ Queued (#${idx + 1})</span>
+            <span class="floating-queue-hint">Runs next after processing</span>
+          </div>
+          <div class="floating-queue-text">${escapeHtml(item.text)}</div>
+        `;
+        floatingQueueContainer.appendChild(card);
+      });
+    }
+
+    function addFloatingQueuedPrompt(prompt) {
+      if (!queuedPromptsList.some(p => p.id === prompt.id)) {
+        queuedPromptsList.push(prompt);
+      }
+      renderFloatingQueue();
+    }
+
+    function removeFloatingQueuedPrompt(promptId) {
+      queuedPromptsList = queuedPromptsList.filter(p => p.id !== promptId);
+      renderFloatingQueue();
+    }
+
+    function promoteQueuedPrompt(data) {
+      // 1. Remove from floated queue
+      removeFloatingQueuedPrompt(data.id);
+
+      // 2. Upload into main chat feed as active prompt
+      appendUserMessage(data.text, data.id, false);
+
+      // 3. Mark active turn processing
+      isAgentWorking = true;
+      actionBtn.classList.add('working');
+      iconSend.style.display = 'none';
+      iconStop.style.display = 'block';
+
+      if (processingBar) {
+        processingBar.style.display = 'flex';
+        processingText.innerText = 'Processing...';
+      }
+
+      activeStepsContainer = document.createElement('div');
+      activeStepsContainer.className = 'steps-container';
+      feed.appendChild(activeStepsContainer);
+      feed.scrollTop = feed.scrollHeight;
+    }
 
     // Theme support
     function toggleTheme() {
@@ -320,19 +394,22 @@
       const promptId = 'p-' + Date.now();
       ws.send(JSON.stringify({ type: 'prompt', text: text, id: promptId }));
 
-      // Append user message card
-      appendUserMessage(text, promptId, isAgentWorking);
+      if (isAgentWorking) {
+        // FLOATED CONDITION: do NOT upload to feed yet!
+        addFloatingQueuedPrompt({ id: promptId, text: text });
+      } else {
+        // Immediately uploaded to feed when agent is idle
+        appendUserMessage(text, promptId, false);
 
-      // Start showing processing indicator immediately
-      if (processingBar) {
-        processingBar.style.display = 'flex';
-        processingText.innerText = 'Processing...';
+        if (processingBar) {
+          processingBar.style.display = 'flex';
+          processingText.innerText = 'Processing...';
+        }
+
+        activeStepsContainer = document.createElement('div');
+        activeStepsContainer.className = 'steps-container';
+        feed.appendChild(activeStepsContainer);
       }
-
-      // Fresh inline step container for this prompt
-      activeStepsContainer = document.createElement('div');
-      activeStepsContainer.className = 'steps-container';
-      feed.appendChild(activeStepsContainer);
 
       promptInput.value = '';
       promptInput.style.height = 'auto';
@@ -508,12 +585,29 @@
 
           if (data.type === 'init_state') {
             setAgentState(data.agent_state);
+            if (data.queue && Array.isArray(data.queue)) {
+              queuedPromptsList = data.queue;
+              renderFloatingQueue();
+            }
+          } else if (data.type === 'queue_update') {
+            if (data.queue && Array.isArray(data.queue)) {
+              queuedPromptsList = data.queue;
+              renderFloatingQueue();
+            }
+          } else if (data.type === 'prompt_queued') {
+            addFloatingQueuedPrompt(data);
+          } else if (data.type === 'prompt_promoted') {
+            promoteQueuedPrompt(data);
           } else if (data.type === 'progress_step') {
             addInlineProgressStep(data.step);
           } else if (data.type === 'agent_state') {
             setAgentState(data.state, data.detail);
           } else if (data.type === 'prompt_status') {
-            updatePromptStatus(data);
+            if (data.status === 'processing') {
+              promoteQueuedPrompt(data);
+            } else if (data.status === 'queued') {
+              addFloatingQueuedPrompt(data);
+            }
           } else if (data.type === 'approval') {
             renderPermissionCard(data);
           } else if (data.type === 'notification') {

@@ -127,6 +127,12 @@ class PWABridge:
                 await self._prompt_queue.put(prompt_entry)
                 logger.info(f"Queued prompt for next agent turn: '{text}' (Queue size: {self._prompt_queue.qsize()})")
                 await self.broadcast({
+                    "type": "prompt_queued",
+                    "id": prompt_id,
+                    "text": text,
+                    "queue_position": len(self._queued_prompts)
+                })
+                await self.broadcast({
                     "type": "prompt_status",
                     "id": prompt_id,
                     "status": "queued",
@@ -183,6 +189,12 @@ class PWABridge:
             await self._broadcast_queue_update()
             
             self._agent_state = "working"
+            await self.broadcast({
+                "type": "prompt_promoted",
+                "id": queued_id,
+                "status": "processing",
+                "text": queued_text
+            })
             await self.broadcast({
                 "type": "prompt_status",
                 "id": queued_id,
