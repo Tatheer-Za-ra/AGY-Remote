@@ -4,17 +4,20 @@ build-backend = "hatchling.build"
 
 [project]
 name = "antigravity-mobile-companion"
-version = "0.1.0"
+version = "1.0.0"
 description = "A secure mobile companion and remote control for Google Antigravity IDE"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Antigravity Community" }
+    { name = "Zara", email = "zara@users.noreply.github.com" }
 ]
 dependencies = [
     "mcp>=1.0.0",
-    "python-telegram-bot>=21.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "httpx>=0.27.0",
+    "ngrok>=1.4.0",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0"
 ]
