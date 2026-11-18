@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mobile-companion": {
+      "command": "python",
+      "args": ["-m", "src.antigravity_companion.server"]
+    }
+  }
+}

@@ -8,8 +8,8 @@ from typing import List, Optional, Set
 
 logger = logging.getLogger("antigravity_companion.permissions")
 
-CONFIG_PATH = Path(r"C:\Users\PMLS\.gemini\config\config.json")
-WORKSPACE_DIR = Path(r"C:\Users\PMLS\Documents\IDE Remote")
+CONFIG_PATH = Path.home() / ".gemini" / "config" / "config.json"
+WORKSPACE_DIR = Path(os.environ.get("PLUGIN_ROOT") or os.getcwd())
 SESSION_FILE = WORKSPACE_DIR / ".session_allowed.json"
 SINGLE_USE_FILE = WORKSPACE_DIR / ".single_use_allowed.json"
 BACKUP_FILE = WORKSPACE_DIR / ".config_backup.json"
@@ -17,6 +17,10 @@ BACKUP_FILE = WORKSPACE_DIR / ".config_backup.json"
 COMPANION_DEFAULT_GRANTS = [
     "command(.\\.venv\\Scripts\\python.exe mobile_listener.py)",
     "command(.\\.venv\\Scripts\\python.exe run_companion.py)",
+    "command(python mobile_listener.py)",
+    "command(python run_companion.py)",
+    "command(python3 mobile_listener.py)",
+    "command(python3 run_companion.py)",
     "command(Get-Process *)",
     "command(Stop-Process *)",
     "command(taskkill *)",

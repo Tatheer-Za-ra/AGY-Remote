@@ -1,2 +1,6 @@
 @echo off
-"C:\Users\PMLS\Documents\IDE Remote\.venv\Scripts\python.exe" "C:\Users\PMLS\Documents\IDE Remote\scripts\remote_post_tool.py"
+if exist "%~dp0..\.venv\Scripts\python.exe" (
+  "%~dp0..\.venv\Scripts\python.exe" "%~dp0remote_post_tool.py"
+) else (
+  python "%~dp0remote_post_tool.py"
+)

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f6feb" />
+      <stop offset="100%" stop-color="#093c8c" />
+    </linearGradient>
+    <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#58a6ff" />
+      <stop offset="100%" stop-color="#1f6feb" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded app badge -->
+  <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#bg-grad)" filter="url(#shadow)" />
+
+  <!-- Outer Signal Ring -->
+  <path d="M 176 110 A 170 170 0 0 1 336 110" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" opacity="0.4" />
+  <path d="M 206 142 A 120 120 0 0 1 306 142" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" opacity="0.75" />
+
+  <!-- Phone Body Outer Frame -->
+  <rect x="136" y="160" width="240" height="280" rx="40" fill="#ffffff" filter="url(#shadow)" />
+  
+  <!-- Phone Screen Inner -->
+  <rect x="152" y="186" width="208" height="216" rx="26" fill="#0d1117" />
+
+  <!-- Antigravity Delta Symbol (Glowing in screen) -->
+  <path d="M 256 220 L 320 334 L 192 334 Z" fill="none" stroke="url(#glow-grad)" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" />
+  <path d="M 256 260 L 290 320 L 222 320 Z" fill="#58a6ff" opacity="0.9" />
+
+  <!-- Signal Pulse Dot -->
+  <circle cx="256" cy="116" r="14" fill="#ffffff" />
+
+  <!-- Phone Home Indicator Bar -->
+  <rect x="220" y="420" width="72" height="6" rx="3" fill="#8c959f" />
+</svg>

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import uuid
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from fastapi import WebSocket
@@ -9,7 +10,7 @@ from .permissions import setup_companion_grants, revert_companion_grants
 
 logger = logging.getLogger("antigravity_companion.pwa_bridge")
 
-PROJECT_ROOT = getattr(config, 'workspace_root', None) or Path(r"C:\Users\PMLS\Documents\IDE Remote")
+PROJECT_ROOT = getattr(config, 'workspace_root', None) or Path(os.environ.get("PLUGIN_ROOT") or os.getcwd())
 
 class PWABridge:
     def __init__(self):

@@ -1,0 +1,28 @@
+{
+  "mobile-companion-gate": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/remote_permission_gate.py",
+            "timeout": 310
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/remote_post_tool.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

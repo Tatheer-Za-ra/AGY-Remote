@@ -11,7 +11,7 @@ This skill allows the agent to communicate bidirectionally with the user's mobil
 
 To provide a seamless remote experience with desktop parity and zero desktop popups, the Mobile Companion implements a dynamic two-state permission architecture:
 
-### 1. When Companion Mode is ON (Remote Session Active):
+### 1. When Companion Mode is ACTIVE (Remote Session Active):
 - **Automated Communication**: All internal companion infrastructure (`mobile_listener.py`, `gate.log`, `tasklist`, `netstat`, `git`) is automatically allowed without desktop popups or mobile spam.
 - **Mobile Touch Redirection**: Any ungranted terminal commands or sensitive file accesses (`.env`, certificates) are redirected directly to the user's phone screen with the 4 standard desktop options:
   1. `Yes, allow this time`
@@ -21,9 +21,11 @@ To provide a seamless remote experience with desktop parity and zero desktop pop
 - **Dynamic Grant Injection**: Approved decisions inject directly into `~/.gemini/config/config.json` before execution, ensuring **zero desktop popups** on the physical monitor.
 - **Single-Use Auto-Cleanup**: The `PostToolUse` lifecycle hook immediately cleans single-use grants after tool execution.
 
-### 2. When Companion Mode is OFF (Workstation Active):
-- The lifecycle hook automatically detects that `.companion_active` is absent and instantly reverts to standard desktop permission review (`ask`).
+### 2. When Companion Mode is in STANDBY:
+- The daemon server and Ngrok tunnel remain alive at ~0% CPU so mobile links never produce 404/502 errors.
+- The lifecycle hook detects that `.companion_active` is absent and instantly reverts to standard desktop permission review (`ask`).
 - All companion grants are safely reverted in `config.json`.
+- The user can wake up Companion Mode at any time with a single tap on `[ ⚡ Turn On Companion Mode ]` or by typing and sending a prompt from mobile.
 
 ---
 

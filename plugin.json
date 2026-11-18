@@ -1,14 +1,31 @@
 {
   "name": "mobile-companion",
   "displayName": "Antigravity Mobile Companion",
-  "description": "Bidirectional mobile companion PWA and remote control for Google Antigravity IDE. Monitor tasks, review code diffs, approve actions, and chat from your phone.",
-  "version": "0.1.0",
-  "author": "Zara & Antigravity Team",
+  "version": "1.0.0",
+  "description": "Bidirectional mobile companion PWA and remote control for Google Antigravity IDE. Monitor tasks, review diffs, approve permissions, and chat from your phone with desktop parity.",
+  "logo": "assets/logo.svg",
+  "author": {
+    "name": "Zara",
+    "url": "https://github.com/Tatheer-Za-ra"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tatheer-Za-ra/AGY-Remote"
+  },
   "homepage": "https://github.com/Tatheer-Za-ra/AGY-Remote",
+  "license": "MIT",
+  "keywords": [
+    "mobile",
+    "companion",
+    "remote",
+    "pwa",
+    "permissions",
+    "antigravity",
+    "ide"
+  ],
   "suggestedPrompts": [
-    "Check mobile companion status and show pairing URLs",
-    "Send a notification to my phone with current progress",
-    "Ask for mobile approval on pending changes"
+    "Start the companion mode and show pairing URLs",
+    "Put companion mode into standby",
+    "Send a progress notification to my mobile companion"
   ]
 }
-
