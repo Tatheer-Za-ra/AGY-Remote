@@ -109,7 +109,7 @@ def main():
                 return
 
         # 2. Safe internal tools that never touch files or processes
-        safe_tools = ["manage_task", "schedule", "read_resource", "list_resources", "search_marketplace"]
+        safe_tools = ["manage_task", "schedule", "read_resource", "list_resources", "search_marketplace", "search_web", "ask_question", "send_message", "manage_subagents"]
         if tool_name in safe_tools:
             print(json.dumps({"decision": "allow"}))
             return
@@ -213,7 +213,7 @@ def main():
             "python.exe -c", "python -c", "Get-Content", "Get-ChildItem", "Select-String",
             "Test-Path", "Get-Item", "Get-Location", "Get-Process", "Stop-Process",
             "Get-CimInstance", "taskkill", "tasklist", "netstat", "curl", "git", "Copy-Item",
-            "shutdown_companion.py"
+            "shutdown_companion.py", "node", "npm", "npx", "vsce", "ovsx", "pip"
         ]
         if any(p.lower() in cmd.lower() for p in companion_infra_patterns):
             log(f"Auto-allowing companion infra command: {cmd[:60]}")

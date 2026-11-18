@@ -27,6 +27,7 @@ scripts/gate.log
 .companion_active
 
 # IDE & OS Files
+*.vsix
 .vscode/
 .idea/
 .DS_Store

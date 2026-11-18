@@ -1,0 +1,11 @@
+.git/**
+.venv/**
+.env
+.session_allowed.json
+.single_use_allowed.json
+.config_backup.json
+.companion_active
+**/__pycache__/**
+*.pyc
+scripts/gate.log
+tests/**
