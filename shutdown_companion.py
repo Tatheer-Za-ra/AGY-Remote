@@ -8,15 +8,21 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 def main():
-    print("Initiating clean Companion Mode shutdown...")
+    is_full_kill = any(arg in sys.argv for arg in ["--kill", "--full", "--stop"])
+    
+    if is_full_kill:
+        print("Initiating full Companion Mode daemon shutdown...")
+    else:
+        print("Putting Companion Mode into Standby (desktop review restored, tunnel stays alive)...")
 
-    # 1. Notify mobile PWA of intentional shutdown
+    # 1. Notify mobile PWA of standby / shutdown
     try:
-        resp = httpx.post("http://127.0.0.1:8765/api/shutdown", json={
-            "message": "Remote companion session has ended cleanly. Desktop permissions have reverted to standard review."
+        endpoint = "http://127.0.0.1:8765/api/companion/standby" if not is_full_kill else "http://127.0.0.1:8765/api/shutdown"
+        resp = httpx.post(endpoint, json={
+            "message": "Companion Mode is now in Standby. Desktop permissions have reverted to standard review."
         }, timeout=2.0)
-        print("✅ Disconnect event broadcasted to mobile PWA.")
-        time.sleep(0.6)  # Allow WebSocket frame delivery before killing process
+        print("✅ Standby state broadcasted to mobile PWA.")
+        time.sleep(0.3)
     except Exception as e:
         print(f"Warning: Could not notify daemon: {e}")
 
@@ -37,7 +43,10 @@ def main():
     except Exception:
         pass
 
-    print("Companion Mode shutdown completed successfully.")
+    if is_full_kill:
+        print("Full Companion Mode shutdown completed successfully.")
+    else:
+        print("Companion Mode is in Standby. Desktop review restored. Mobile wakeup is ready.")
 
 if __name__ == "__main__":
     main()

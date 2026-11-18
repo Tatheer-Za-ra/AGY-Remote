@@ -53,11 +53,25 @@ async def api_remote_turn(payload: dict):
     instruction = await bridge.wait_for_instruction(prompt_context, timeout=timeout)
     return {"instruction": instruction}
 
+@app.post("/api/companion/activate")
+async def api_activate_companion():
+    await bridge.set_companion_mode("active")
+    return {"status": "activated", "mode": "active"}
+
+@app.post("/api/companion/standby")
+async def api_standby_companion():
+    await bridge.set_companion_mode("standby")
+    return {"status": "standby", "mode": "standby"}
+
+@app.get("/api/companion/mode")
+async def api_get_companion_mode():
+    return {"mode": bridge.get_companion_mode()}
+
 @app.post("/api/shutdown")
 async def api_shutdown(payload: dict = {}):
-    message = payload.get("message", "Remote companion session has ended cleanly. Desktop permissions have reverted to standard review.")
+    message = payload.get("message", "Companion Mode is now in Standby. Desktop permissions have reverted to standard review.")
     await bridge.notify_shutdown(message)
-    return {"status": "shutdown_notified"}
+    return {"status": "standby_notified"}
 
 @app.post("/api/progress")
 async def api_progress(payload: dict):

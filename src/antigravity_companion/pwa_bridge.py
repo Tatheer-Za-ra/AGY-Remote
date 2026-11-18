@@ -1,11 +1,15 @@
 import asyncio
 import logging
 import uuid
+from pathlib import Path
 from typing import Dict, List, Optional, Set
 from fastapi import WebSocket
 from .config import config
+from .permissions import setup_companion_grants, revert_companion_grants
 
 logger = logging.getLogger("antigravity_companion.pwa_bridge")
+
+PROJECT_ROOT = getattr(config, 'workspace_root', None) or Path(r"C:\Users\PMLS\Documents\IDE Remote")
 
 class PWABridge:
     def __init__(self):
@@ -19,6 +23,33 @@ class PWABridge:
         self._agent_state: str = "idle" # idle | thinking | working
         self.public_url: str = ""
 
+    def get_companion_mode(self) -> str:
+        marker = PROJECT_ROOT / ".companion_active"
+        return "active" if marker.exists() else "standby"
+
+    async def set_companion_mode(self, mode: str):
+        marker = PROJECT_ROOT / ".companion_active"
+        if mode == "active":
+            try:
+                marker.write_text("1")
+            except Exception:
+                pass
+            setup_companion_grants()
+            logger.info("Companion Mode activated: desktop permissions enabled.")
+        else:
+            try:
+                if marker.exists():
+                    marker.unlink(missing_ok=True)
+            except Exception:
+                pass
+            revert_companion_grants()
+            logger.info("Companion Mode in Standby: desktop permissions reverted.")
+
+        await self.broadcast({
+            "type": "companion_mode",
+            "mode": mode
+        })
+
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.add(websocket)
@@ -28,6 +59,7 @@ class PWABridge:
         try:
             await websocket.send_json({
                 "type": "init_state",
+                "companion_mode": self.get_companion_mode(),
                 "agent_state": self._agent_state,
                 "active_step": self._active_step,
                 "recent_steps": self._recent_steps[-10:],
@@ -92,7 +124,15 @@ class PWABridge:
         """Handles messages sent from mobile phone via WebSocket."""
         msg_type = message.get("type")
 
-        if msg_type == "approval_response":
+        if msg_type == "activate_companion":
+            await self.set_companion_mode("active")
+            return
+
+        elif msg_type == "standby_companion":
+            await self.set_companion_mode("standby")
+            return
+
+        elif msg_type == "approval_response":
             approval_id = message.get("id")
             decision = message.get("decision")
             future = self._pending_approvals.get(approval_id)
@@ -104,6 +144,10 @@ class PWABridge:
             text = message.get("text", "").strip()
             if not text:
                 return
+
+            # If in standby mode, automatically wake up to active
+            if self.get_companion_mode() == "standby":
+                await self.set_companion_mode("active")
 
             prompt_id = message.get("id") or str(uuid.uuid4())[:8]
             logger.info(f"Incoming mobile prompt [{prompt_id}]: '{text}'")
@@ -150,12 +194,9 @@ class PWABridge:
         }
         await self.broadcast(payload)
 
-    async def notify_shutdown(self, message: str = "Remote companion session has ended cleanly. Desktop permissions have reverted to standard review."):
-        await self.broadcast({
-            "type": "companion_shutdown",
-            "message": message
-        })
-        await asyncio.sleep(0.5)
+    async def notify_shutdown(self, message: str = "Companion Mode is now in Standby. Desktop permissions have reverted to standard review."):
+        await self.set_companion_mode("standby")
+        await asyncio.sleep(0.3)
 
     async def ask_approval(self, question: str, options: Optional[List[str]] = None, timeout: int = 300, title: Optional[str] = None, target: Optional[str] = None) -> str:
         if not options:
