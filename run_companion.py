@@ -1,6 +1,7 @@
 import atexit
 import signal
 import sys
+from pathlib import Path
 import uvicorn
 import logging
 from src.antigravity_companion.config import config
@@ -12,7 +13,7 @@ from src.antigravity_companion.permissions import setup_companion_grants, revert
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("companion_daemon")
 
-PROJECT_ROOT = config.workspace_root if hasattr(config, 'workspace_root') else Path(__file__).parent
+PROJECT_ROOT = getattr(config, 'workspace_root', None) or Path(__file__).parent
 
 def cleanup():
     logger.info("Cleaning up Companion Mode grants before shutdown...")
