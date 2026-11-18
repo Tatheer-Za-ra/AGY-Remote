@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "scripts\\run_gate.bat",
+            "command": "..\\scripts\\run_gate.bat",
             "timeout": 310
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "scripts\\run_post_tool.bat",
+            "command": "..\\scripts\\run_post_tool.bat",
             "timeout": 30
           }
         ]
