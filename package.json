@@ -1,0 +1,57 @@
+{
+  "name": "antigravity-mobile-companion",
+  "displayName": "Antigravity Mobile Companion",
+  "description": "Bidirectional mobile companion PWA and remote control for Google Antigravity IDE. Monitor tasks, review diffs, approve permissions, and chat from your phone with desktop parity.",
+  "version": "1.0.0",
+  "publisher": "tatheer-za-ra",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "mobile",
+    "companion",
+    "remote",
+    "pwa",
+    "antigravity",
+    "ai"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "icon": "assets/logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tatheer-Za-ra/AGY-Remote.git"
+  },
+  "homepage": "https://github.com/Tatheer-Za-ra/AGY-Remote",
+  "license": "MIT",
+  "contributes": {
+    "commands": [
+      {
+        "command": "antigravity.companion.start",
+        "title": "Start Companion Mode",
+        "category": "Antigravity Companion"
+      },
+      {
+        "command": "antigravity.companion.standby",
+        "title": "Put into Standby",
+        "category": "Antigravity Companion"
+      },
+      {
+        "command": "antigravity.companion.showQR",
+        "title": "Show Mobile Pairing URL & QR",
+        "category": "Antigravity Companion"
+      },
+      {
+        "command": "antigravity.companion.openPWA",
+        "title": "Open Mobile Web App in Browser",
+        "category": "Antigravity Companion"
+      }
+    ]
+  }
+}
