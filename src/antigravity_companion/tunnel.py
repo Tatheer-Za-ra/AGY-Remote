@@ -24,16 +24,22 @@ def get_local_ip() -> str:
 
 def _start_ngrok_tunnel(port: int):
     global current_tunnel_url, _ngrok_listener
-    try:
-        import ngrok
-        logger.info("Initializing persistent Ngrok tunnel with user authtoken...")
-        _ngrok_listener = ngrok.forward(port, authtoken=config.ngrok_authtoken)
-        base_url = _ngrok_listener.url()
-        current_tunnel_url = f"{base_url}/?token={config.secret_token}"
-        logger.info(f"🚀 Permanent Ngrok Tunnel Active: {current_tunnel_url}")
-    except Exception as e:
-        logger.error(f"Failed to start ngrok tunnel: {e}. Falling back to Cloudflare...")
-        _start_cloudflare_tunnel(port)
+    for attempt in range(1, 5):
+        try:
+            import ngrok
+            logger.info(f"Initializing persistent Ngrok tunnel with user authtoken (attempt {attempt}/4)...")
+            _ngrok_listener = ngrok.forward(port, authtoken=config.ngrok_authtoken)
+            base_url = _ngrok_listener.url()
+            current_tunnel_url = f"{base_url}/?token={config.secret_token}"
+            logger.info(f"🚀 Permanent Ngrok Tunnel Active: {current_tunnel_url}")
+            return
+        except Exception as e:
+            logger.warning(f"Ngrok connection attempt {attempt} failed: {e}")
+            if attempt < 4:
+                time.sleep(2.5)
+            else:
+                logger.error("Failed to start ngrok tunnel after 4 attempts. Falling back to Cloudflare...")
+                _start_cloudflare_tunnel(port)
 
 def _start_cloudflare_tunnel(port: int):
     global current_tunnel_url
