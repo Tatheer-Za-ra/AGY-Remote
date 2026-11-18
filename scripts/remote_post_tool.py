@@ -31,7 +31,7 @@ try:
         if tool_name == "run_command":
             cmd = args.get("CommandLine", "").strip()
             # Ignore internal companion noise
-            if not any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem", "git status", "git rev-parse", "git log"]):
+            if not any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "shutdown_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem", "git status", "git rev-parse", "git log"]):
                 summary = args.get("toolSummary", "")
                 if summary and not any(i in summary.lower() for i in ["mobile", "companion", "gate", "status"]):
                     label = f"Ran {summary.lower()} >"
@@ -49,7 +49,7 @@ try:
         elif tool_name == "read_file":
             raw_path = args.get("Path", "")
             fp = Path(raw_path).name
-            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "config.json", "mobile_listener", "run_companion"]):
+            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "config.json", "mobile_listener", "run_companion", "shutdown_companion"]):
                 is_code = any(fp.endswith(ext) for ext in [".json", ".py", ".js", ".ts", ".html", ".css", ".md", ".env"])
                 start_line = args.get("StartLine")
                 end_line = args.get("EndLine")
@@ -59,7 +59,7 @@ try:
         elif tool_name in ["write_file", "edit_file"]:
             raw_path = args.get("Path", "")
             fp = Path(raw_path).name
-            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "config.json"]):
+            if fp and not any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "config.json", "mobile_listener", "run_companion", "shutdown_companion"]):
                 is_code = any(fp.endswith(ext) for ext in [".json", ".py", ".js", ".ts", ".html", ".css", ".md"])
                 label = f"Modified {fp}"
 

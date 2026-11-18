@@ -237,10 +237,10 @@
     <div class="card agent-msg">
       <div class="card-title">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="#1f6feb"><path d="M12 2L2 19h20L12 2zm0 4l6.5 11h-13L12 6z"/></svg>
-        <span>Antigravity Remote Connected</span>
+        <span>Antigravity Remote Workspace</span>
       </div>
-      <div class="card-body">Desktop session is active. Execution permissions and real-time step progress are synchronized directly with your device.</div>
-      <div class="card-time" id="init-time">Connected</div>
+      <div class="card-body">Mobile companion session for Google Antigravity. Execution approvals, prompt queuing, and real-time step progress are managed through this portal.</div>
+      <div class="card-time" id="init-time">Workspace Hub</div>
     </div>
   </div>
 
@@ -674,6 +674,28 @@
             isAgentWorking = false;
             statusDot.className = 'status-dot off';
             statusText.innerText = 'Offline';
+
+            // Clean up any shutdown step pills or lingering active pulsing indicators
+            document.querySelectorAll('.step-item').forEach(item => {
+              if (item.innerText.toLowerCase().includes('shutdown')) {
+                item.remove();
+              } else if (item.classList.contains('active')) {
+                item.classList.remove('active');
+                item.classList.add('done');
+                const pulse = item.querySelector('.step-pulse');
+                if (pulse) pulse.remove();
+                if (!item.querySelector('.step-chevron')) {
+                  const chev = document.createElement('span');
+                  chev.className = 'step-chevron';
+                  chev.innerText = '>';
+                  item.appendChild(chev);
+                }
+              }
+            });
+            document.querySelectorAll('.steps-container').forEach(c => {
+              if (!c.children.length) c.remove();
+            });
+            activeStepsContainer = null;
 
             const card = document.createElement('div');
             card.className = 'card agent-msg';

@@ -49,20 +49,20 @@ def emit_user_progress(tool_name: str, args: dict):
         if tool_name == "read_file":
             raw_path = args.get("Path", "")
             fp = Path(raw_path).name
-            if not fp or any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "mobile_listener", "run_companion", "config.json"]):
+            if not fp or any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "mobile_listener", "run_companion", "shutdown_companion", "config.json"]):
                 return
             is_code = any(fp.endswith(ext) for ext in [".json", ".py", ".js", ".ts", ".html", ".css", ".md", ".env"])
             label = f"Analyzing {fp}"
         elif tool_name in ["write_file", "edit_file"]:
             raw_path = args.get("Path", "")
             fp = Path(raw_path).name
-            if not fp or any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "config.json"]):
+            if not fp or any(i in fp.lower() for i in ["gate.log", "session_allowed", "single_use", "mobile_listener", "run_companion", "shutdown_companion", "config.json"]):
                 return
             is_code = any(fp.endswith(ext) for ext in [".json", ".py", ".js", ".ts", ".html", ".css", ".md"])
             label = f"Modifying {fp}"
         elif tool_name == "run_command":
             cmd = args.get("CommandLine", "").strip()
-            if any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem", "git status", "git rev-parse", "git log"]):
+            if any(i in cmd.lower() for i in ["mobile_listener", "run_companion", "shutdown_companion", "gate.log", "run_gate", "netstat", "taskkill", "stop-process", "get-process", "get-content", "get-childitem", "git status", "git rev-parse", "git log"]):
                 return
             summary = args.get("toolSummary", "")
             if summary and not any(i in summary.lower() for i in ["mobile", "companion", "gate", "status"]):
