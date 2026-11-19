@@ -80,17 +80,58 @@ function activate(context) {
 
     // 3. Command: Start
     const startCmd = vscode.commands.registerCommand('antigravity.companion.start', () => {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || context.extensionPath;
-        const terminal = vscode.window.createTerminal({ name: 'Antigravity Companion', cwd: workspaceRoot });
-        terminal.sendText('python run_companion.py');
+        const fs = require('fs');
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        let root = context.extensionPath;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+            const candidate = workspaceFolders[0].uri.fsPath;
+            if (fs.existsSync(path.join(candidate, 'run_companion.py'))) {
+                root = candidate;
+            }
+        }
+
+        const isWin = process.platform === 'win32';
+        let pythonCmd = 'python';
+        const venvWin = path.join(root, '.venv', 'Scripts', 'python.exe');
+        const venvUnix = path.join(root, '.venv', 'bin', 'python');
+        if (isWin && fs.existsSync(venvWin)) {
+            pythonCmd = `"${venvWin}"`;
+        } else if (!isWin && fs.existsSync(venvUnix)) {
+            pythonCmd = `"${venvUnix}"`;
+        }
+
+        const runScript = path.join(root, 'run_companion.py');
+        const terminal = vscode.window.createTerminal({ name: 'Antigravity Companion', cwd: root });
+        terminal.show();
+        terminal.sendText(`${pythonCmd} "${runScript}"`);
         vscode.window.showInformationMessage('Starting Antigravity Mobile Companion daemon...');
         setTimeout(() => checkCompanionStatus(mode => updateStatusBar(mode)), 3000);
     });
 
     // 4. Command: Standby
     const standbyCmd = vscode.commands.registerCommand('antigravity.companion.standby', () => {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || context.extensionPath;
-        exec('python shutdown_companion.py', { cwd: workspaceRoot }, (err, stdout) => {
+        const fs = require('fs');
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        let root = context.extensionPath;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+            const candidate = workspaceFolders[0].uri.fsPath;
+            if (fs.existsSync(path.join(candidate, 'shutdown_companion.py'))) {
+                root = candidate;
+            }
+        }
+
+        const isWin = process.platform === 'win32';
+        let pythonCmd = 'python';
+        const venvWin = path.join(root, '.venv', 'Scripts', 'python.exe');
+        const venvUnix = path.join(root, '.venv', 'bin', 'python');
+        if (isWin && fs.existsSync(venvWin)) {
+            pythonCmd = `"${venvWin}"`;
+        } else if (!isWin && fs.existsSync(venvUnix)) {
+            pythonCmd = `"${venvUnix}"`;
+        }
+
+        const shutdownScript = path.join(root, 'shutdown_companion.py');
+        exec(`${pythonCmd} "${shutdownScript}"`, { cwd: root }, (err, stdout) => {
             if (err) {
                 vscode.window.showErrorMessage(`Failed to enter Standby: ${err.message}`);
             } else {
