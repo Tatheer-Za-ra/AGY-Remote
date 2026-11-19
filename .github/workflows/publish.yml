@@ -1,6 +1,9 @@
 name: Publish Extension to Open VSX
 
 on:
+  push:
+    tags:
+      - 'v*'
   release:
     types: [published]
   workflow_dispatch:
@@ -25,6 +28,6 @@ jobs:
         run: npx @vscode/vsce package --no-dependencies
 
       - name: Publish to Open VSX
-        run: npx ovsx publish *.vsix --trusted-publishing
+        run: npx ovsx publish *.vsix --trusted-publishing --skip-duplicate
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
