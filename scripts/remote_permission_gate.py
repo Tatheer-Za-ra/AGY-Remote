@@ -20,16 +20,22 @@ def log(msg: str):
 
 def is_companion_mode_on() -> bool:
     marker = PROJECT_ROOT / ".companion_active"
-    if marker.exists():
-        return True
+    if not marker.exists():
+        return False
     try:
-        resp = httpx.get("http://127.0.0.1:8765/manifest.json", timeout=0.2)
+        resp = httpx.get("http://127.0.0.1:8765/api/companion/mode", timeout=0.3)
         if resp.status_code == 200:
-            marker.write_text("1")
+            data = resp.json()
+            if data.get("mode") == "standby":
+                try:
+                    marker.unlink(missing_ok=True)
+                except Exception:
+                    pass
+                return False
             return True
     except Exception:
         pass
-    return False
+    return marker.exists()
 
 def is_sensitive_file(file_path: str) -> bool:
     name = Path(file_path).name.lower()

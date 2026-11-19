@@ -28,7 +28,10 @@ def _start_ngrok_tunnel(port: int):
         try:
             import ngrok
             logger.info(f"Initializing persistent Ngrok tunnel with user authtoken (attempt {attempt}/4)...")
-            _ngrok_listener = ngrok.forward(port, authtoken=config.ngrok_authtoken)
+            options = {"authtoken": config.ngrok_authtoken}
+            if getattr(config, "ngrok_domain", None):
+                options["domain"] = config.ngrok_domain
+            _ngrok_listener = ngrok.forward(port, **options)
             base_url = _ngrok_listener.url()
             current_tunnel_url = f"{base_url}/?token={config.secret_token}"
             logger.info(f"🚀 Permanent Ngrok Tunnel Active: {current_tunnel_url}")

@@ -1,7 +1,7 @@
 {
   "name": "mobile-companion",
   "displayName": "Antigravity Mobile Companion",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bidirectional mobile companion PWA and remote control for Google Antigravity IDE. Monitor tasks, review diffs, approve permissions, and chat from your phone with desktop parity.",
   "logo": "assets/logo.svg",
   "author": {

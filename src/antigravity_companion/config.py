@@ -18,6 +18,7 @@ class CompanionConfig:
         self.enable_tunnel = os.getenv("ENABLE_TUNNEL", "true").lower() in ("true", "1", "yes")
         self.tunnel_provider = os.getenv("TUNNEL_PROVIDER", "ngrok").lower()
         self.ngrok_authtoken = os.getenv("NGROK_AUTHTOKEN", "").strip()
+        self.ngrok_domain = os.getenv("NGROK_DOMAIN", "mocha-judo-powdery.ngrok-free.dev").strip()
 
     def validate(self):
         return True
