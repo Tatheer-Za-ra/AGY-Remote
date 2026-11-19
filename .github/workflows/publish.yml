@@ -24,5 +24,7 @@ jobs:
       - name: Package Extension
         run: npx @vscode/vsce package --no-dependencies
 
-      - name: Publish to Open VSX via Trusted Publishing
-        run: npx ovsx publish --trusted-publishing
+      - name: Publish to Open VSX
+        run: npx ovsx publish *.vsix --trusted-publishing
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
