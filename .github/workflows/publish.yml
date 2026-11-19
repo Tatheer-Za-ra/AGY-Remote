@@ -24,10 +24,13 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install latest ovsx
+        run: npm install -g ovsx@latest
+
       - name: Package Extension
         run: npx @vscode/vsce package --no-dependencies
 
       - name: Publish to Open VSX
-        run: npx ovsx publish *.vsix --trusted-publishing --skip-duplicate
+        run: ovsx publish *.vsix --trusted-publishing --skip-duplicate
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
